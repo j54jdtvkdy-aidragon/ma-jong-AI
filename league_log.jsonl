@@ -61,3 +61,23 @@
 {"stage": "gen_result", "gen": 0, "vs_champ": 2.479, "se": 0.025, "dist": [0.259, 0.262, 0.221, 0.259], "champ_vs_eff+": 2.487, "chall_vs_eff+": 2.495, "accepted": false, "params": {"riichi_extra_han": 0.3259136424293642, "menzen_yaku_han": 0.38958969522173037, "yakuhai_pair_han": 0.12435182523771787, "value_scale": 1.2404380491720302, "pwin_scale": 0.9237294031368377, "open_boost": 1.3974972725423351, "riichi_pw_mult": 1.261727510994978, "danger_scale": 0.9419797519502373, "loss_scale": 0.8503582804642054, "future_scale": 0.07235003646203433, "fold_cost": 612.4337184717381, "fold_risk": 0.01306593890013728, "open_threat3": 0.7897603009101926, "open_threat2": 0.423286849004647, "call_mult": 1.102896499596161, "call_add": 226.10723440184586, "kan_max_shanten": 2, "kan_enable": 1, "real_value": 1, "tsumo_share": 0.46154954910060586, "riichi_value_mult": 1.1842397874414199, "def_model": 1, "threat_min": 0.12781738783207872, "mc_rollouts": 0, "mc_max_shanten": 3, "mc_scale": 1.0, "mc_hazard": 0.04, "mc_ron_riichi": 0.25, "mc_ron_dama": 0.2, "riichi_bias": 103.37377161118017, "fold_shanten": 4, "push_danger_limit": 0.8490449233685765, "yakuhai_pon_force": 0, "sure_yaku_call_force": 0, "lead_defense": 1.0583693694549898, "trail_aggr": 1.006592007928269}, "t": 2060}
 {"stage": 1, "gen": 1, "round": 0, "cand": "center", "avg_rank": 2.46, "t": 2074}
 {"stage": 1, "gen": 1, "round": 0, "cand": "c0", "avg_rank": 2.52, "t": 2088}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c1", "avg_rank": 2.47, "t": 2102}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c2", "avg_rank": 2.44, "t": 2117}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c3", "avg_rank": 2.53, "t": 2131}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c4", "avg_rank": 2.49, "t": 2145}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c5", "avg_rank": 2.46, "t": 2159}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c6", "avg_rank": 2.52, "t": 2172}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c7", "avg_rank": 2.56, "t": 2186}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c8", "avg_rank": 2.41, "t": 2200}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c9", "avg_rank": 2.46, "t": 2214}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c10", "avg_rank": 2.5, "t": 2228}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c11", "avg_rank": 2.45, "t": 2241}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c12", "avg_rank": 2.45, "t": 2255}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c13", "avg_rank": 2.51, "t": 2269}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c14", "avg_rank": 2.39, "t": 2283}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c15", "avg_rank": 2.53, "t": 2297}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c16", "avg_rank": 2.51, "t": 2310}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c17", "avg_rank": 2.48, "t": 2325}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c18", "avg_rank": 2.45, "t": 2339}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c19", "avg_rank": 2.48, "t": 2353}
+{"stage": 2, "gen": 1, "round": 0, "cand": "c14", "avg_rank_cum": 2.525, "t": 2394}

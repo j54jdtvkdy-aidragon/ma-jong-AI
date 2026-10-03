@@ -62,3 +62,6 @@
 {"stage": 1, "gen": 1, "round": 0, "cand": "center", "avg_rank": 2.46, "t": 1765}
 {"stage": 1, "gen": 1, "round": 0, "cand": "c0", "avg_rank": 2.52, "t": 1778}
 {"stage": 1, "gen": 1, "round": 0, "cand": "c1", "avg_rank": 2.49, "t": 1791}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c2", "avg_rank": 2.49, "t": 1804}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c3", "avg_rank": 2.55, "t": 1817}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c4", "avg_rank": 2.67, "t": 1830}

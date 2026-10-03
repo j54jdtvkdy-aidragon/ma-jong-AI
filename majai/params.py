@@ -33,9 +33,9 @@ class Params:
     mc_rollouts: int = 0              # 候補ごとのシミュレーション回数
     mc_max_shanten: int = 3           # 最善手がこのシャンテン以下の局面でだけ使う
     mc_scale: float = 1.0             # MC和了率の倍率
-    mc_hazard: float = 0.16           # 毎巡、他家の和了などで局が終わる確率(自己対戦で較正)
-    mc_ron_riichi: float = 0.8        # 立直時に、待ち牌が他家から出たときロンできる割合(較正)
-    mc_ron_dama: float = 0.08         # ダマ/手替わり時の同割合(較正)
+    mc_hazard: float = 0.04           # 毎巡、他家の和了などで局が終わる確率(自己対戦で較正)
+    mc_ron_riichi: float = 0.25       # 立直時に、待ち牌が他家から出たときロンできる割合(較正)
+    mc_ron_dama: float = 0.2         # ダマ/手替わり時の同割合(較正)
     # 強い素朴bot(efficiency+)の戦術。既定はすべてオフ(=従来の挙動)
     riichi_bias: float = 0.0          # 立直候補のEVに加算する点数(大きいほど聴牌即立直に近づく)
     fold_shanten: int = 99            # 立直者がいて、最善でもこのシャンテン以上なら強制オリ(1=efficiency+と同じ)

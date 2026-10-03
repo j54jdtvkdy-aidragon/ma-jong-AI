@@ -284,8 +284,30 @@ def evaluate_discards(st: StateTracker, forbidden=()) -> List[Candidate]:
                 mode, ev = "attack", attack_ev
             cands.append(Candidate(t, idx, rch, s, u, utiles, pd, pw, value, ev, mode,
                                    {"han": han, "p_dealin_total": attack_dealin, "loss": L}))
+    _apply_tactics(st, cands, ths)
     cands.sort(key=lambda c: (-c.ev, c.shanten, -c.ukeire))
     return cands
+
+
+def _apply_tactics(st, cands, ths):
+    """efficiency+ 由来の戦術(立直バイアス・強制オリ・危険牌を押さない)。既定ではすべて無効。"""
+    P = st.params
+    if P.riichi_bias:
+        for c in cands:
+            if c.riichi:
+                c.ev += P.riichi_bias
+    if not ths or not cands:
+        return
+    riichi_threat = any(w >= 1.0 for _, w in ths)
+    best_s = min(c.shanten for c in cands)
+    if riichi_threat and best_s >= P.fold_shanten:
+        for c in cands:      # 放銃率が低い順 → シャンテン → 受け入れ
+            c.mode = "fold"
+            c.ev = -1e6 * c.danger - 100.0 * c.shanten + 0.01 * c.ukeire - (1e5 if c.riichi else 0)
+    elif riichi_threat and best_s == 0 and P.push_danger_limit < 1.0:
+        for c in cands:
+            if c.danger > P.push_danger_limit:
+                c.ev -= 1e5
 
 
 def choose_discard(st: StateTracker, forbidden=()) -> dict:
@@ -376,12 +398,41 @@ def evaluate_pass(st: StateTracker) -> dict:
             "can_win": sure or menzen}
 
 
+def _forced_call(st, actor, tile, opts, base):
+    """efficiency+ 流の鳴き: 脅威がない場合の役牌ポン / 役が確定した手の前進。"""
+    P = st.params
+    if not (P.yakuhai_pon_force or P.sure_yaku_call_force) or threats(st):
+        return None
+    idx = str_to_idx(tile)
+    yakuhai = idx >= 31 or idx in (27 + "ESWN".index(st.bakaze), 27 + "ESWN".index(st.seat_wind))
+    if P.yakuhai_pon_force and yakuhai:
+        for o in opts:
+            if o["type"] == "pon":
+                c = evaluate_call(st, actor, tile, o)
+                if c is not None:
+                    return o, c
+    if P.sure_yaku_call_force:
+        counts = st.hand_counts()
+        simples = all(not is_terminal_or_honor(i) for i in range(34) if counts[i])
+        if not st.is_menzen() or simples:
+            for o in opts:
+                c = evaluate_call(st, actor, tile, o)
+                if c is not None and c.shanten < base["shanten"]:
+                    _, sure = estimate_han(st, counts, st.melds[st.me], False, False)
+                    if sure:
+                        return o, c
+    return None
+
+
 def choose_call(st: StateTracker, actor: int, tile: str):
     """鳴く価値があれば (opt, candidate) を、なければ None。"""
     opts = [o for o in call_options(st, actor, tile) if o["type"] != "daiminkan"]
     if not opts or st.riichi[st.me] or st.tiles_left < 4:
         return None
     base = evaluate_pass(st)
+    forced = _forced_call(st, actor, tile, opts, base)
+    if forced is not None:
+        return forced
     best = None
     for o in opts:
         c = evaluate_call(st, actor, tile, o)

@@ -3,7 +3,7 @@
 #   bash scripts/checkpoint_push.sh [間隔秒=300]
 cd "$(dirname "$0")/.."
 while true; do
-  git add tuning_log.jsonl tuning_center.json best_params.json majai/best_params.json 2>/dev/null
+  git add tuning_log.jsonl tuning_center.json majai/best_params.json league_log.jsonl league_state.json champions 2>/dev/null
   if ! git diff --cached --quiet; then
     git commit -q -m "Tuning checkpoint $(date -u +%H:%M)
 

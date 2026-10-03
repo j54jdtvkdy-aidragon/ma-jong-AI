@@ -29,6 +29,12 @@ class Params:
     call_add: float = 150.0           # 鳴く場合のEV加算しきい値(点)
     kan_max_shanten: int = 2          # このシャンテン以下のときのみカン
     kan_enable: int = 1               # 0でカンしない
+    # 強い素朴bot(efficiency+)の戦術。既定はすべてオフ(=従来の挙動)
+    riichi_bias: float = 0.0          # 立直候補のEVに加算する点数(大きいほど聴牌即立直に近づく)
+    fold_shanten: int = 99            # 立直者がいて、最善でもこのシャンテン以上なら強制オリ(1=efficiency+と同じ)
+    push_danger_limit: float = 1.0    # 立直者に聴牌で押すとき、放銃率がこれを超える牌は切らない(0.12=efficiency+)
+    yakuhai_pon_force: int = 0        # 1: 役牌は脅威がなければEVに関わらずポン
+    sure_yaku_call_force: int = 0     # 1: 役が確定した副露手/タンヤオ形でシャンテンが進む鳴きは常にする
     # 順位を意識した調整 (南3局以降)
     lead_defense: float = 1.0         # トップ目での放銃失点の倍率
     trail_aggr: float = 1.0           # 4位での打点の倍率

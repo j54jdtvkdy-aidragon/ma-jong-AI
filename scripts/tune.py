@@ -23,6 +23,9 @@ SPACE = {
     "call_mult": (0.8, 1.8, "lin"), "call_add": (-300.0, 800.0, "lin"),
     "kan_max_shanten": (0, 3, "int"), "kan_enable": (0, 1, "int"),
     "lead_defense": (0.8, 2.5, "log"), "trail_aggr": (0.8, 2.0, "log"),
+    "riichi_bias": (0.0, 3000.0, "lin"), "fold_shanten": (1, 5, "int"),
+    "push_danger_limit": (0.03, 1.0, "lin"), "yakuhai_pon_force": (0, 1, "int"),
+    "sure_yaku_call_force": (0, 1, "int"),
 }
 
 

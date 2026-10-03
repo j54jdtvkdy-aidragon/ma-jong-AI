@@ -25,7 +25,7 @@ SPACE = {
     "lead_defense": (0.8, 2.5, "log"), "trail_aggr": (0.8, 2.0, "log"),
     "riichi_bias": (0.0, 3000.0, "lin"), "fold_shanten": (1, 5, "int"),
     "push_danger_limit": (0.03, 1.0, "lin"), "yakuhai_pon_force": (0, 1, "int"),
-    "sure_yaku_call_force": (0, 1, "int"),
+    "sure_yaku_call_force": (0, 1, "int"), "threat_min": (0.03, 0.4, "lin"),
 }
 
 

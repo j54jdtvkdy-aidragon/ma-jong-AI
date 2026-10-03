@@ -80,6 +80,7 @@ def logloss(p, y):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--games", type=int, default=400)
+    ap.add_argument("--save-data", help="収集データをnpzに保存")
     a = ap.parse_args()
     t0 = time.time()
     with Pool(4) as pool:
@@ -87,6 +88,14 @@ if __name__ == "__main__":
     tile_rows = [r for o in out for r in o[0]]
     tp_rows = [r for o in out for r in o[1]]
     print(f"データ収集 {time.time() - t0:.0f}s  牌サンプル={len(tile_rows)} 聴牌サンプル={len(tp_rows)}")
+    if a.save_data:
+        np.savez_compressed(a.save_data,
+                            tile_kind=np.array([r[0] for r in tile_rows], dtype=np.int8),
+                            tile_x=np.array([r[1] for r in tile_rows], dtype=np.float32),
+                            tile_y=np.array([r[2] for r in tile_rows], dtype=np.float32),
+                            tile_old=np.array([r[3] for r in tile_rows], dtype=np.float32),
+                            tp_x=np.array([r[0] for r in tp_rows], dtype=np.float32),
+                            tp_y=np.array([r[1] for r in tp_rows], dtype=np.float32))
     model = {"tile": {}, "tenpai": {}, "features": {"tile": D.TILE_FEATURES, "tenpai": D.TENPAI_FEATURES}}
     # 聴牌確率
     X = np.array([r[0] for r in tp_rows]); y = np.array([r[1] for r in tp_rows])

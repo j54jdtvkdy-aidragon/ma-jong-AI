@@ -33,9 +33,9 @@ def vs_plus(pool, p, games, seed0):
     return evaluate(games, "majai", "efficiency+", asdict(p), seed0=seed0, pool=pool)
 
 
-def search(pool, champ, gen, a, rng):
-    """champを相手に挑戦者を探索し、最良の挑戦者を返す。"""
-    center = champ
+def search(pool, champ, gen, a, rng, init=None):
+    """champを相手に挑戦者を探索し、最良の挑戦者を返す。initがあればそこから探索を始める。"""
+    center = init or champ
     for rd in range(a.rounds):
         sd = a.sd * (0.8 ** rd)
         base = 1_000_000 * (gen + 1) + rd * 10000
@@ -78,17 +78,19 @@ def main():
     ap.add_argument("--val", type=int, default=2000)
     ap.add_argument("--sd", type=float, default=0.15)
     ap.add_argument("--resume", action="store_true")
+    ap.add_argument("--init", help="最初の挑戦者の探索開始点(パラメータJSON)。チャンピオンは現在のbest_params.jsonのまま")
     a = ap.parse_args()
     champ, gen, hist = Params.best(), 0, []
     if a.resume and os.path.exists(STATE):
         st = json.load(open(STATE))
         champ, gen, hist = Params.from_dict(st["champion"]), st["gen"], st["history"]
         print(f"再開: 第{gen}世代から")
+    start_gen = gen
     os.makedirs("champions", exist_ok=True)
     pool = Pool(4)
     while gen < a.gens:
         rng = random.Random(1000 + gen)
-        chall = search(pool, champ, gen, a, rng)
+        chall = search(pool, champ, gen, a, rng, init=Params.load(a.init) if (a.init and gen == start_gen) else None)
         vs0 = 9_000_000 + gen * 100000
         r = vs_champ(pool, chall, champ, a.val, vs0)
         win = r["avg_rank"] < 2.5 - 1.5 * r["se"]

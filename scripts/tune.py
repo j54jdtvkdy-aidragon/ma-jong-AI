@@ -66,9 +66,15 @@ def main():
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--sd", type=float, default=0.18)
     ap.add_argument("--log", default="tuning_log.jsonl")
+    ap.add_argument("--resume", action="store_true", help="tuning_log.jsonl と tuning_center.json から、完了済みラウンドの続きを再開する")
     a = ap.parse_args()
-    rng = random.Random(a.seed)
+    done = 0
     center = Params.best()
+    if a.resume and os.path.exists(a.log) and os.path.exists("tuning_center.json"):
+        done = sum(1 for l in open(a.log) if '"stage": "round_best"' in l)
+        center = Params.load("tuning_center.json")
+        print(f"再開: 完了済み {done} ラウンド")
+    rng = random.Random(a.seed * 1000 + done)
     default = Params()
     pool = Pool(4)
     t0 = time.time()
@@ -80,7 +86,7 @@ def main():
         print(json.dumps({k: v for k, v in rec.items() if k != "params"}, ensure_ascii=False), flush=True)
 
     seed_base = 100000 * a.seed
-    for rd in range(a.rounds):
+    for rd in range(done, a.rounds):
         sd = a.sd * (0.8 ** rd)
         s1, s2, s3 = seed_base + rd * 10000, seed_base + rd * 10000 + 2000, seed_base + rd * 10000 + 4000
         cands = [("center", center)] + [(f"c{i}", sample(center, sd, rng)) for i in range(a.pop)]

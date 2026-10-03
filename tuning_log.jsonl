@@ -72,3 +72,40 @@
 {"stage": 3, "round": 1, "cand": "c22", "avg_rank_cum": 2.385, "t": 1894}
 {"stage": 3, "round": 1, "cand": "center", "avg_rank_cum": 2.408, "t": 1979}
 {"stage": "round_best", "round": 1, "cand": "c2", "avg_rank_cum": 2.368, "params": {"riichi_extra_han": 0.2323141447462429, "menzen_yaku_han": 0.4767783548285773, "yakuhai_pair_han": 0.14079950640044708, "value_scale": 1.132939694518963, "pwin_scale": 0.7290556351555588, "open_boost": 1.35, "riichi_pw_mult": 1.1979667704295784, "danger_scale": 0.9042719910979145, "loss_scale": 1.2453254937377598, "future_scale": 0.028578222466216496, "fold_cost": 716.1663365417552, "fold_risk": 0.05033632833488066, "open_threat3": 0.679525759906064, "open_threat2": 0.35000000000000003, "call_mult": 1.1044761224137805, "call_add": 94.21874055786674, "kan_max_shanten": 2, "kan_enable": 1, "lead_defense": 0.8, "trail_aggr": 1.0557720072600258}, "t": 1979}
+{"stage": 1, "round": 2, "cand": "center", "avg_rank": 2.45, "se": 0.122, "t": 1994}
+{"stage": 1, "round": 2, "cand": "c0", "avg_rank": 2.37, "se": 0.119, "t": 2008}
+{"stage": 1, "round": 2, "cand": "c1", "avg_rank": 2.39, "se": 0.118, "t": 2022}
+{"stage": 1, "round": 2, "cand": "c2", "avg_rank": 2.37, "se": 0.119, "t": 2037}
+{"stage": 1, "round": 2, "cand": "c3", "avg_rank": 2.44, "se": 0.122, "t": 2051}
+{"stage": 1, "round": 2, "cand": "c4", "avg_rank": 2.35, "se": 0.113, "t": 2065}
+{"stage": 1, "round": 2, "cand": "c5", "avg_rank": 2.43, "se": 0.12, "t": 2079}
+{"stage": 1, "round": 2, "cand": "c6", "avg_rank": 2.46, "se": 0.121, "t": 2093}
+{"stage": 1, "round": 2, "cand": "c7", "avg_rank": 2.46, "se": 0.119, "t": 2107}
+{"stage": 1, "round": 2, "cand": "c8", "avg_rank": 2.37, "se": 0.115, "t": 2122}
+{"stage": 1, "round": 2, "cand": "c9", "avg_rank": 2.36, "se": 0.124, "t": 2136}
+{"stage": 1, "round": 2, "cand": "c10", "avg_rank": 2.42, "se": 0.124, "t": 2150}
+{"stage": 1, "round": 2, "cand": "c11", "avg_rank": 2.42, "se": 0.119, "t": 2164}
+{"stage": 1, "round": 2, "cand": "c12", "avg_rank": 2.32, "se": 0.121, "t": 2178}
+{"stage": 1, "round": 2, "cand": "c13", "avg_rank": 2.46, "se": 0.122, "t": 2193}
+{"stage": 1, "round": 2, "cand": "c14", "avg_rank": 2.5, "se": 0.118, "t": 2207}
+{"stage": 1, "round": 2, "cand": "c15", "avg_rank": 2.37, "se": 0.123, "t": 2222}
+{"stage": 1, "round": 2, "cand": "c16", "avg_rank": 2.35, "se": 0.12, "t": 2236}
+{"stage": 1, "round": 2, "cand": "c17", "avg_rank": 2.38, "se": 0.124, "t": 2251}
+{"stage": 1, "round": 2, "cand": "c18", "avg_rank": 2.36, "se": 0.119, "t": 2265}
+{"stage": 1, "round": 2, "cand": "c19", "avg_rank": 2.38, "se": 0.118, "t": 2280}
+{"stage": 1, "round": 2, "cand": "c20", "avg_rank": 2.42, "se": 0.116, "t": 2294}
+{"stage": 1, "round": 2, "cand": "c21", "avg_rank": 2.4, "se": 0.12, "t": 2308}
+{"stage": 1, "round": 2, "cand": "c22", "avg_rank": 2.43, "se": 0.124, "t": 2322}
+{"stage": 1, "round": 2, "cand": "c23", "avg_rank": 2.39, "se": 0.113, "t": 2337}
+{"stage": 2, "round": 2, "cand": "c12", "avg_rank_cum": 2.408, "t": 2378}
+{"stage": 2, "round": 2, "cand": "c4", "avg_rank_cum": 2.48, "t": 2420}
+{"stage": 2, "round": 2, "cand": "c16", "avg_rank_cum": 2.435, "t": 2461}
+{"stage": 2, "round": 2, "cand": "c9", "avg_rank_cum": 2.415, "t": 2502}
+{"stage": 2, "round": 2, "cand": "c18", "avg_rank_cum": 2.41, "t": 2543}
+{"stage": 2, "round": 2, "cand": "c0", "avg_rank_cum": 2.395, "t": 2584}
+{"stage": 2, "round": 2, "cand": "center", "avg_rank_cum": 2.467, "t": 2625}
+{"stage": 3, "round": 2, "cand": "c0", "avg_rank_cum": 2.363, "t": 2710}
+{"stage": 3, "round": 2, "cand": "c12", "avg_rank_cum": 2.393, "t": 2796}
+{"stage": 3, "round": 2, "cand": "c18", "avg_rank_cum": 2.416, "t": 2882}
+{"stage": 3, "round": 2, "cand": "center", "avg_rank_cum": 2.413, "t": 2967}
+{"stage": "round_best", "round": 2, "cand": "c0", "avg_rank_cum": 2.363, "params": {"riichi_extra_han": 0.3232757125347355, "menzen_yaku_han": 0.46063196011598473, "yakuhai_pair_han": 0.18478401210637838, "value_scale": 1.3354498906838221, "pwin_scale": 0.7832125878637827, "open_boost": 1.4553614957467125, "riichi_pw_mult": 1.1160927508561824, "danger_scale": 0.9895693932052988, "loss_scale": 0.9778791244462982, "future_scale": 0.018575844603040723, "fold_cost": 776.578737471391, "fold_risk": 0.026906998779002368, "open_threat3": 0.679525759906064, "open_threat2": 0.2951014645101612, "call_mult": 1.1453275766595332, "call_add": 127.911697320217, "kan_max_shanten": 2, "kan_enable": 1, "lead_defense": 0.9461655766684312, "trail_aggr": 1.0122953526428542}, "t": 2967}

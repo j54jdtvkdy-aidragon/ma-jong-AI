@@ -124,6 +124,10 @@ def _load():
         lib.ukeire_c.argtypes = [ctypes.POINTER(ctypes.c_int), ctypes.c_int, ctypes.POINTER(ctypes.c_int),
                                  ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_ulonglong)]
         lib.ukeire_c.restype = ctypes.c_int
+        lib.mc_win.argtypes = [ctypes.POINTER(ctypes.c_int), ctypes.c_int, ctypes.POINTER(ctypes.c_int),
+                               ctypes.POINTER(ctypes.c_int), ctypes.c_int, ctypes.c_int, ctypes.c_ulonglong,
+                               ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.POINTER(ctypes.c_double),
+                               ctypes.POINTER(ctypes.c_double)]
         _lib = lib
     except Exception:
         _lib = None
@@ -196,3 +200,14 @@ def ukeire13(counts13, melds, visible):
     m = ctypes.c_ulonglong()
     u = _lib.ukeire_c(_A34(*counts13), melds, _A34(*visible), ctypes.byref(s), ctypes.byref(m))
     return s.value, u, _mask_to_list(m.value)
+
+
+def mc_win(counts13, melds, unseen, furi, draws, rollouts, seed, fixed, ron_rate, hazard=0.0):
+    """モンテカルロで (ツモ和了確率, ロン和了確率) を推定。C実装が無ければ None。"""
+    if _lib is None:
+        return None
+    pt, pr = ctypes.c_double(), ctypes.c_double()
+    _lib.mc_win(_A34(*counts13), melds, _A34(*unseen), _A34(*furi), int(draws), int(rollouts),
+                ctypes.c_ulonglong(seed & 0xFFFFFFFFFFFFFFFF), int(fixed), float(ron_rate), float(hazard),
+                ctypes.byref(pt), ctypes.byref(pr))
+    return pt.value, pr.value

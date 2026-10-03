@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from math import comb
 from typing import List, Optional
 
-from .shanten import shanten, tenpai_waits, discard_table, ukeire13
+from .shanten import shanten, tenpai_waits, discard_table, ukeire13, mc_win
 from .state import StateTracker
 from .tiles import str_to_idx, idx_to_str, is_red, is_terminal_or_honor, suit_num
 
@@ -225,6 +225,23 @@ def _ukeire(counts, melds_n, base_s, visible):
     return total, tiles
 
 
+def _mc_pwin(st, counts13, melds_n, visible, river_extra, fixed, seed):
+    """モンテカルロ和了率 (ツモ+ロン)。C実装が無ければ None。役の有無は呼び出し側で扱う。"""
+    P = st.params
+    unseen = [max(0, 4 - v) for v in visible]
+    furi = [0] * 34
+    for d in st.discards[st.me]:
+        furi[str_to_idx(d.tile)] = 1
+    if river_extra is not None:
+        furi[river_extra] = 1
+    draws = max(1, int(st.tiles_left / 4))
+    r = mc_win(counts13, melds_n, unseen, furi, draws, P.mc_rollouts, seed, 1 if fixed else 0,
+               P.mc_ron_riichi if fixed else P.mc_ron_dama, P.mc_hazard)
+    if r is None:
+        return None
+    return min(0.97, (r[0] + r[1]) * P.mc_scale)
+
+
 def evaluate_discards(st: StateTracker, forbidden=()) -> List[Candidate]:
     """14枚持ちの局面で各打牌候補(通常/立直)を評価し、EV降順に返す。"""
     counts = st.hand_counts()
@@ -238,6 +255,10 @@ def evaluate_discards(st: StateTracker, forbidden=()) -> List[Candidate]:
     cands = []
     done = set()
     table = discard_table(counts, melds_n, visible)
+    best_s = min(v[0] for v in table.values())
+    use_mc = st.params.mc_rollouts > 0
+    mc_seed = hash((st.me, st.draws, tuple(counts))) & 0xFFFFFFFF
+    mc_cache = {}
     for t in st.hand:
         idx = str_to_idx(t)
         if idx in forbidden:
@@ -263,9 +284,19 @@ def evaluate_discards(st: StateTracker, forbidden=()) -> List[Candidate]:
             value = han_to_points(han, dealer) * st.params.value_scale
             if _late(st) and _my_rank(st) == 4:
                 value *= st.params.trail_aggr
-            pw = p_win_est(s, u, unseen, st.tiles_left, menzen, can_win, st.params)
-            if rch:
-                pw = min(0.8, pw * st.params.riichi_pw_mult)
+            pw = None
+            if use_mc and can_win and s <= min(best_s + 1, st.params.mc_max_shanten):
+                fixed = rch or st.riichi[st.me]
+                key = (idx, fixed)
+                if key not in mc_cache:
+                    c13 = counts[:]
+                    c13[idx] -= 1
+                    mc_cache[key] = _mc_pwin(st, c13, melds_n, visible, idx, fixed, mc_seed)
+                pw = mc_cache[key]
+            if pw is None:
+                pw = p_win_est(s, u, unseen, st.tiles_left, menzen, can_win, st.params)
+                if rch:
+                    pw = min(0.8, pw * st.params.riichi_pw_mult)
             # 攻撃: 今回の危険 + 以降の押しで払う危険
             k_future = 0.0
             if ths:
@@ -393,7 +424,12 @@ def evaluate_pass(st: StateTracker) -> dict:
     if menzen:
         han += 1.0
     value = han_to_points(han, st.me == st.oya) * st.params.value_scale
-    pw = p_win_est(s, u, unseen, st.tiles_left - 2, menzen, sure or menzen, st.params)
+    pw = None
+    if st.params.mc_rollouts > 0 and (sure or menzen) and s <= st.params.mc_max_shanten:
+        pw = _mc_pwin(st, counts, melds_n, visible, None, st.riichi[st.me],
+                      hash((st.me, st.draws, tuple(counts))) & 0xFFFFFFFF)
+    if pw is None:
+        pw = p_win_est(s, u, unseen, st.tiles_left - 2, menzen, sure or menzen, st.params)
     return {"shanten": s, "ukeire": u, "p_win": pw, "value": value, "ev": pw * value,
             "can_win": sure or menzen}
 

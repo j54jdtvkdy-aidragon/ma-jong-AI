@@ -9,7 +9,7 @@ from majai import shanten as S
 from majai.state import StateTracker
 from majai.tiles import str_to_idx
 
-GRID = list(itertools.product([0.03, 0.06, 0.1, 0.16], [0.07, 0.1, 0.14, 0.18, 0.24]))
+GRID = list(itertools.product([0.05, 0.1, 0.2, 0.35], [0.0, 0.02, 0.04, 0.07, 0.1]))
 
 
 class Rec(AIPlayer):

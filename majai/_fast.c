@@ -188,7 +188,7 @@ static int pick_discard(int *h, int melds, int *out_s) {
         h[k]++;
     }
     if (best_k >= 0) { *out_s = best_s; }
-    return best_k;   /* 呼び出し側で h[best_k]-- 済みの状態に注意 */
+    return best_k;   /* h は元の状態(14枚)のまま。切る処理は呼び出し側で行う */
 }
 
 void mc_win(const int *cnt13, int melds, const int *unseen, const int *furi, int draws, int rollouts,
@@ -219,7 +219,8 @@ void mc_win(const int *cnt13, int melds, const int *unseen, const int *furi, int
             if (fixed) { h[x]--; fu[x] = fu[x]; }
             else {
                 int s;
-                int k = pick_discard(h, melds, &s);   /* h[k] は既に1減っている */
+                int k = pick_discard(h, melds, &s);   /* pick_discardは手牌を元に戻して返す */
+                h[k]--;                               /* 実際に切る */
                 s_now = s;
                 fu[k] = 1;
             }

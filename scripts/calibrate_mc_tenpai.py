@@ -7,8 +7,8 @@ from majai.players import AIPlayer
 from majai import shanten as S
 from majai.tiles import str_to_idx
 
-RR = [0.03, 0.06, 0.1, 0.15, 0.22, 0.3, 0.4, 0.55]
-HZ = 0.16
+RR = [0.1, 0.2, 0.35, 0.5, 0.7, 0.85, 1.0]
+HZ = 0.05
 
 
 class Rec(AIPlayer):

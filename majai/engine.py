@@ -102,8 +102,13 @@ class Round:
         return None if r.error else r
 
 
-def play_game(players, seed=None, log=None):
+HOOK = None     # 学習データ収集用: 打牌のたびに HOOK(rd, trackers) が呼ばれる
+
+
+def play_game(players, seed=None, log=None, hook=None):
     """players: 4つのエージェント。戻り値 dict(scores, ranks, events)。"""
+    global HOOK
+    HOOK = hook
     rng = random.Random(seed)
     ev = log if log is not None else []
     scores = [25000] * 4
@@ -223,6 +228,8 @@ def _play_round(players, trackers, emit, rd: Round, scores):
         rd.discards[cur].append(dtile)
         rd.ippatsu[cur] = False
         emit({"type": "dahai", "actor": cur, "pai": id_to_str(dtile), "tsumogiri": tsumogiri})
+        if HOOK is not None:
+            HOOK(rd, trackers)
         while rd.pending_dora:           # 明槓・加槓のカンドラは打牌後にめくる
             rd.pending_dora -= 1
             _reveal_dora(rd, emit)

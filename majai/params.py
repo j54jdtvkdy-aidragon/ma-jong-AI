@@ -29,6 +29,9 @@ class Params:
     call_add: float = 150.0           # 鳴く場合のEV加算しきい値(点)
     kan_max_shanten: int = 2          # このシャンテン以下のときのみカン
     kan_enable: int = 1               # 0でカンしない
+    # 学習済み守備モデル (majai/defense_model.json)。0なら従来の手作りヒューリスティック
+    def_model: int = 0
+    threat_min: float = 0.10          # 聴牌確率がこれ以上の相手を警戒対象にする
     # モンテカルロ和了率 (mc_rollouts=0 で無効=従来の幾何分布近似)
     mc_rollouts: int = 0              # 候補ごとのシミュレーション回数
     mc_max_shanten: int = 3           # 最善手がこのシャンテン以下の局面でだけ使う

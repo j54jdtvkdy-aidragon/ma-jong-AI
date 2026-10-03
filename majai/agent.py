@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from .shanten import shanten, tenpai_waits, discard_table, ukeire13, mc_win
 from .state import StateTracker
+from . import defense as _def
 from .tiles import str_to_idx, idx_to_str, is_red, is_terminal_or_honor, suit_num
 
 # ---------------- 打点見積り ----------------
@@ -72,6 +73,8 @@ def tile_danger(st: StateTracker, idx: int, p: int, visible) -> float:
     """プレイヤーpの待ちに idx が当たる確率の概算 (p が聴牌している前提)。"""
     if idx in st.genbutsu(p):
         return 0.0
+    if st.params.def_model and _def.available():
+        return _def.p_hit(st, p, idx, visible)
     hand_mine = sum(1 for t in st.hand if str_to_idx(t) == idx)
     others_seen = visible[idx] - hand_mine
     if idx >= 27:
@@ -108,6 +111,13 @@ def tile_danger(st: StateTracker, idx: int, p: int, visible) -> float:
 def threats(st: StateTracker):
     """[(player, weight)]: 立直者は1.0、3副露以上の仕掛けは0.5。"""
     out = []
+    if st.params.def_model and _def.available():
+        for p in range(4):
+            if p != st.me:
+                w = _def.p_tenpai(st, p)
+                if w >= st.params.threat_min:
+                    out.append((p, w))
+        return out
     for p in range(4):
         if p == st.me:
             continue

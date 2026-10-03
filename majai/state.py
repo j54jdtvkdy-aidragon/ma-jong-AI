@@ -3,7 +3,9 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 from .tiles import str_to_idx, is_red
-from .params import DEFAULT as _DEFAULT_PARAMS
+from .params import Params as _Params
+
+_DEFAULT_PARAMS = _Params.best()     # レビューなどAIプレイヤー経由でないときも、調整済みの設定で評価する
 
 
 @dataclass
@@ -49,6 +51,8 @@ class StateTracker:
         self.last_discard = None            # (actor, tile)
         self.last_draw: Optional[str] = None
         self.rinshan_next = False
+        self.last_meld_turn = [None] * 4     # 各家が最後に副露した時点の自分の河の枚数
+        self._dcache = {}
         self.pending_riichi = None
         self.seen_after_riichi = [set() for _ in range(4)]  # 立直後に他家が切った牌(現物扱い)
 
@@ -113,6 +117,10 @@ class StateTracker:
     # ---- イベント処理 ----
     def update(self, ev: dict):
         t = ev["type"]
+        self._dcache.clear()
+        if t in ("chi", "pon", "daiminkan", "ankan", "kakan"):
+            a_ = ev["actor"]
+            self.last_meld_turn[a_] = len(self.discards[a_])
         if t == "start_kyoku":
             self.reset_round(ev["oya"], ev["bakaze"], ev["kyoku"], ev["honba"], ev["kyotaku"],
                              ev["scores"], [ev["dora_marker"]])

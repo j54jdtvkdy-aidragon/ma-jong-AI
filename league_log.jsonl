@@ -150,3 +150,7 @@
 {"stage": 3, "gen": 2, "round": 0, "cand": "c18", "avg_rank_cum": 2.431, "t": 4084}
 {"stage": 3, "gen": 2, "round": 0, "cand": "c2", "avg_rank_cum": 2.413, "t": 4159}
 {"stage": "round_best", "gen": 2, "round": 0, "cand": "c2", "avg_rank_cum": 2.413, "t": 4159}
+{"stage": 1, "gen": 2, "round": 1, "cand": "center", "avg_rank": 2.46, "t": 4172}
+{"stage": 1, "gen": 2, "round": 1, "cand": "c0", "avg_rank": 2.5, "t": 4184}
+{"stage": 1, "gen": 2, "round": 1, "cand": "c1", "avg_rank": 2.42, "t": 4197}
+{"stage": 1, "gen": 2, "round": 1, "cand": "c2", "avg_rank": 2.46, "t": 4209}

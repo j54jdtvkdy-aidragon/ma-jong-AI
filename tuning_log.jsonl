@@ -22,3 +22,5 @@
 {"stage": 1, "round": 0, "cand": "c20", "avg_rank": 2.42, "se": 0.114, "t": 299}
 {"stage": 1, "round": 0, "cand": "c21", "avg_rank": 2.51, "se": 0.104, "t": 313}
 {"stage": 1, "round": 0, "cand": "c22", "avg_rank": 2.5, "se": 0.114, "t": 327}
+{"stage": 1, "round": 0, "cand": "c23", "avg_rank": 2.52, "se": 0.118, "t": 340}
+{"stage": 2, "round": 0, "cand": "c20", "avg_rank_cum": 2.485, "t": 382}

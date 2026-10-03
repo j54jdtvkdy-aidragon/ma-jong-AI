@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 demo_game.jsonl
 .pytest_cache/
+*.so

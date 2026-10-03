@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 from .tiles import str_to_idx, is_red
+from .params import DEFAULT as _DEFAULT_PARAMS
 
 
 @dataclass
@@ -28,6 +29,7 @@ class Discard:
 class StateTracker:
     def __init__(self, me: int):
         self.me = me
+        self.params = _DEFAULT_PARAMS
         self.reset_round(0, "E", 1, 0, 0, [25000] * 4, [])
 
     def reset_round(self, oya, bakaze, kyoku, honba, kyotaku, scores, dora_markers):

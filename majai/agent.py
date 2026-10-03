@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from math import comb
 from typing import List, Optional
 
-from .shanten import shanten, tenpai_waits
+from .shanten import shanten, tenpai_waits, discard_table, ukeire13
 from .state import StateTracker
 from .tiles import str_to_idx, idx_to_str, is_red, is_terminal_or_honor, suit_num
 
@@ -42,7 +42,7 @@ def estimate_han(st: StateTracker, counts, melds, menzen: bool, riichi: bool):
             yaku += 1
             sure = True
         elif tot[i] == 2:
-            yaku += 0.35
+            yaku += st.params.yakuhai_pair_han
     if st.bakaze == st.seat_wind and tot[27 + "ESWN".index(st.bakaze)] >= 3:
         yaku += 1
     if all(not is_terminal_or_honor(i) for i in range(34) if tot[i]):
@@ -60,7 +60,7 @@ def estimate_han(st: StateTracker, counts, melds, menzen: bool, riichi: bool):
             sure = sure or (suit_tiles + hon == total and total >= 9)
     # 対子手・一気通貫などは概算しない。立直の1翻は呼び出し側で加算する
     if menzen:
-        yaku += 0.4          # 平和・ツモ・一盃口などの期待
+        yaku += st.params.menzen_yaku_han     # 平和・ツモ・一盃口などの期待
     return han + yaku, sure
 
 
@@ -114,17 +114,17 @@ def threats(st: StateTracker):
         if st.riichi[p]:
             out.append((p, 1.0))
         elif len(st.melds[p]) >= 3:
-            out.append((p, 0.5))
+            out.append((p, st.params.open_threat3))
         elif len(st.melds[p]) == 2 and sum(
                 1 for m in st.melds[p] for t in m.tiles if str_to_idx(t) in st.dora_indices() or is_red(t)) >= 2:
-            out.append((p, 0.35))
+            out.append((p, st.params.open_threat2))
     return out
 
 
 def deal_in_prob(st, idx, visible, ths) -> float:
     q = 1.0
     for p, w in ths:
-        q *= 1 - w * tile_danger(st, idx, p, visible)
+        q *= 1 - min(0.99, w * tile_danger(st, idx, p, visible) * st.params.danger_scale)
     return 1 - q
 
 
@@ -133,7 +133,18 @@ def loss_if_deal_in(st, ths) -> float:
         return 0.0
     p = max(ths, key=lambda x: x[1])[0]
     base = 9500 if p == st.oya else 6500
-    return base + 1000
+    L = (base + 1000) * st.params.loss_scale
+    if _late(st) and _my_rank(st) == 1:
+        L *= st.params.lead_defense
+    return L
+
+
+def _my_rank(st) -> int:
+    return 1 + sum(1 for i, x in enumerate(st.scores) if i != st.me and x > st.scores[st.me])
+
+
+def _late(st) -> bool:
+    return ("ESW".index(st.bakaze) * 4 + st.kyoku - 1) >= 6
 
 
 # ---------------- 和了確率 ----------------
@@ -150,13 +161,15 @@ def binom_tail(n: int, q: float, k: int) -> float:
 _TYPICAL_UKEIRE = {1: 13, 2: 19, 3: 24}
 
 
-def p_win_est(s: int, ukeire: int, unseen: int, tiles_left: int, menzen: bool, can_win: bool) -> float:
+def p_win_est(s: int, ukeire: int, unseen: int, tiles_left: int, menzen: bool, can_win: bool, P=None) -> float:
     """s+1段階(各段階は毎巡確率qで進む幾何分布)を、残り自摸回数d以内に完了する確率。"""
     if not can_win:
         return 0.0
     d = max(0, int(tiles_left / 4.0))
     unseen = max(unseen, 1)
-    boost = 1.0 if menzen else 1.35          # 鳴きで進みやすい
+    from .params import DEFAULT
+    P = P or DEFAULT
+    boost = 1.0 if menzen else P.open_boost          # 鳴きで進みやすい
     qs = []
     for j in range(s, -1, -1):               # j: そのステージ開始時のシャンテン
         if j == 0:
@@ -178,7 +191,7 @@ def p_win_est(s: int, ukeire: int, unseen: int, tiles_left: int, menzen: bool, c
             nxt[k] += pr * (1 - qs[k])
             nxt[k + 1] += pr * qs[k]
         dp = nxt
-    return dp[-1] * 0.85
+    return dp[-1] * P.pwin_scale
 
 
 # ---------------- 候補評価 ----------------
@@ -224,6 +237,7 @@ def evaluate_discards(st: StateTracker, forbidden=()) -> List[Candidate]:
     dealer = st.me == st.oya
     cands = []
     done = set()
+    table = discard_table(counts, melds_n, visible)
     for t in st.hand:
         idx = str_to_idx(t)
         if idx in forbidden:
@@ -233,9 +247,7 @@ def evaluate_discards(st: StateTracker, forbidden=()) -> List[Candidate]:
         if key in done:
             continue
         done.add(key)
-        counts[idx] -= 1
-        s = shanten(counts, melds_n)
-        u, utiles = _ukeire(counts, melds_n, s, visible) if s >= 0 else (0, [])
+        s, u, utiles = table[idx]
         pd = deal_in_prob(st, idx, visible, ths) if ths else 0.0
         variants = [False]
         if s == 0 and menzen and st.scores[st.me] >= 1000 and st.tiles_left >= 4 and not st.riichi[st.me]:
@@ -247,21 +259,23 @@ def evaluate_discards(st: StateTracker, forbidden=()) -> List[Candidate]:
             if menzen and (riichi_on or s > 0):
                 han += 1.0 if not sure else (1.0 if riichi_on or s > 0 else 0.0)
             if s == 0 and rch:
-                han += 0.5
-            value = han_to_points(han, dealer)
-            pw = p_win_est(s, u, unseen, st.tiles_left, menzen, can_win)
+                han += st.params.riichi_extra_han
+            value = han_to_points(han, dealer) * st.params.value_scale
+            if _late(st) and _my_rank(st) == 4:
+                value *= st.params.trail_aggr
+            pw = p_win_est(s, u, unseen, st.tiles_left, menzen, can_win, st.params)
             if rch:
-                pw = min(0.8, pw * 1.05)
+                pw = min(0.8, pw * st.params.riichi_pw_mult)
             # 攻撃: 今回の危険 + 以降の押しで払う危険
             k_future = 0.0
             if ths:
                 q_hit = max(u / max(unseen, 1), 0.02)
-                k_future = min(st.tiles_left / 4.0, (s + 1) / q_hit * 0.6)
+                k_future = min(st.tiles_left / 4.0, (s + 1) / q_hit * 0.6) * st.params.future_scale
             avg_future = 0.07 * sum(w for _, w in ths) if ths else 0.0
             attack_dealin = min(0.95, pd + k_future * avg_future * (0.6 if s <= 0 else 1.0))
             attack_ev = pw * value - attack_dealin * L
             # オリ: 以降は安全牌を切る前提。安全牌の残りが無いリスクは0.02/巡で近似
-            fold_ev = -pd * L - 600 * (1 if ths else 0) - 0.02 * L * (1 if ths else 0) * 2
+            fold_ev = -pd * L - st.params.fold_cost * (1 if ths else 0) - st.params.fold_risk * L * (1 if ths else 0)
             if rch:
                 fold_ev = -9e9    # 立直は降りない
             if ths and sum(w for _, w in ths) > 0:
@@ -270,7 +284,6 @@ def evaluate_discards(st: StateTracker, forbidden=()) -> List[Candidate]:
                 mode, ev = "attack", attack_ev
             cands.append(Candidate(t, idx, rch, s, u, utiles, pd, pw, value, ev, mode,
                                    {"han": han, "p_dealin_total": attack_dealin, "loss": L}))
-        counts[idx] += 1
     cands.sort(key=lambda c: (-c.ev, c.shanten, -c.ukeire))
     return cands
 
@@ -351,15 +364,14 @@ def evaluate_pass(st: StateTracker) -> dict:
     counts = st.hand_counts()
     visible = st.visible_counts()
     melds_n = len(st.melds[st.me])
-    s = shanten(counts, melds_n)
-    u, _ = _ukeire(counts, melds_n, s, visible)
+    s, u, _ = ukeire13(counts, melds_n, visible)
     unseen = 136 - sum(visible)
     menzen = st.is_menzen()
     han, sure = estimate_han(st, counts, st.melds[st.me], menzen, False)
     if menzen:
         han += 1.0
-    value = han_to_points(han, st.me == st.oya)
-    pw = p_win_est(s, u, unseen, st.tiles_left - 2, menzen, sure or menzen)
+    value = han_to_points(han, st.me == st.oya) * st.params.value_scale
+    pw = p_win_est(s, u, unseen, st.tiles_left - 2, menzen, sure or menzen, st.params)
     return {"shanten": s, "ukeire": u, "p_win": pw, "value": value, "ev": pw * value,
             "can_win": sure or menzen}
 
@@ -377,7 +389,7 @@ def choose_call(st: StateTracker, actor: int, tile: str):
             continue
         if best is None or c.ev > best[1].ev:
             best = (o, c)
-    if best and best[1].ev > base["ev"] * 1.15 + 150 and (
+    if best and best[1].ev > base["ev"] * st.params.call_mult + st.params.call_add and (
             best[1].shanten < base["shanten"] or (not base["can_win"] and best[1].shanten <= base["shanten"])):
         return best
     return None
@@ -442,6 +454,8 @@ def _leader_protect(st: StateTracker) -> bool:
 def kan_judgement(st: StateTracker, opt: dict):
     """(カンすべきか, 理由)。暗槓/加槓/大明槓すべてに使う。"""
     me, kind = st.me, opt["type"]
+    if not st.params.kan_enable:
+        return False, "カンは見送る設定です。"
     counts = st.hand_counts()
     mn = len(st.melds[me])
     ths = threats(st)
@@ -474,7 +488,7 @@ def kan_judgement(st: StateTracker, opt: dict):
         return False, "オーラスでトップ目なので、カンドラで局が荒れるリスクを避けて見送ります。"
     if s_after > s_before:
         return False, f"カンするとシャンテン数が{s_before}→{s_after}に後退します。"
-    if s_after > 2:
+    if s_after > st.params.kan_max_shanten:
         return False, "手がまだ遠い(3シャンテン以上)ので、カンで相手にドラを与えるより手を進めます。"
     return True, ("カンしても手が進み(または維持し)、場に脅威がないので、"
                   "カンドラ・符の増加・嶺上牌ツモの利益が相手にドラを与える損を上回ります。")

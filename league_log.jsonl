@@ -71,3 +71,16 @@
 {"stage": 1, "gen": 1, "round": 0, "cand": "c8", "avg_rank": 2.48, "t": 2073}
 {"stage": 1, "gen": 1, "round": 0, "cand": "c9", "avg_rank": 2.52, "t": 2086}
 {"stage": 1, "gen": 1, "round": 0, "cand": "c10", "avg_rank": 2.44, "t": 2099}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c11", "avg_rank": 2.54, "t": 2113}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c12", "avg_rank": 2.47, "t": 2128}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c13", "avg_rank": 2.48, "t": 2142}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c14", "avg_rank": 2.51, "t": 2157}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c15", "avg_rank": 2.48, "t": 2170}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c16", "avg_rank": 2.44, "t": 2184}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c17", "avg_rank": 2.48, "t": 2198}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c18", "avg_rank": 2.52, "t": 2212}
+{"stage": 1, "gen": 1, "round": 0, "cand": "c19", "avg_rank": 2.56, "t": 2226}
+{"stage": 2, "gen": 1, "round": 0, "cand": "c1", "avg_rank_cum": 2.533, "t": 2266}
+{"stage": 2, "gen": 1, "round": 0, "cand": "c3", "avg_rank_cum": 2.558, "t": 2307}
+{"stage": 2, "gen": 1, "round": 0, "cand": "c10", "avg_rank_cum": 2.542, "t": 2349}
+{"stage": 2, "gen": 1, "round": 0, "cand": "c16", "avg_rank_cum": 2.54, "t": 2391}

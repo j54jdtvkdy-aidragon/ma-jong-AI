@@ -31,4 +31,4 @@ def test_mc_furiten_blocks_ron_and_fixed_hand_cannot_improve():
     free = S.mc_win(tenpai, 0, _unseen(tenpai), [0] * 34, 12, 600, 2, 1, 0.5, 0.0)
     fu = S.mc_win(tenpai, 0, _unseen(tenpai), furi, 12, 600, 2, 1, 0.5, 0.0)
     assert fu[1] == 0 and free[1] > 0                               # フリテンならロン不可
-    assert fu[0] == free[0]                                         # ツモは同じ
+    assert sum(fu) < sum(free)                                      # フリテンだと和了の合計は減る

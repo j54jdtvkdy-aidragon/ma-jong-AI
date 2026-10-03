@@ -130,3 +130,5 @@
 {"stage": 1, "gen": 2, "round": 0, "cand": "c6", "avg_rank": 2.48, "t": 3579}
 {"stage": 1, "gen": 2, "round": 0, "cand": "c7", "avg_rank": 2.51, "t": 3592}
 {"stage": 1, "gen": 2, "round": 0, "cand": "c8", "avg_rank": 2.51, "t": 3605}
+{"stage": 1, "gen": 2, "round": 0, "cand": "c9", "avg_rank": 2.45, "t": 3618}
+{"stage": 1, "gen": 2, "round": 0, "cand": "c10", "avg_rank": 2.5, "t": 3631}

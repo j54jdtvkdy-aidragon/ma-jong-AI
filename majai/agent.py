@@ -7,6 +7,7 @@ from typing import List, Optional
 from .shanten import shanten, tenpai_waits, discard_table, ukeire13, mc_win
 from .state import StateTracker
 from . import defense as _def
+from .value import wait_values as _wait_values
 from .tiles import str_to_idx, idx_to_str, is_red, is_terminal_or_honor, suit_num
 
 # ---------------- 打点見積り ----------------
@@ -294,6 +295,18 @@ def evaluate_discards(st: StateTracker, forbidden=()) -> List[Candidate]:
             value = han_to_points(han, dealer) * st.params.value_scale
             if _late(st) and _my_rank(st) == 4:
                 value *= st.params.trail_aggr
+            u_use = u
+            if st.params.real_value and s == 0 and utiles:
+                # 聴牌: 待ち牌ごとに実際の役判定で点数を計算(ダマで役なしの待ちはロン不可として除外)
+                hand13 = list(st.hand)
+                hand13.remove(t)
+                rem = {w: 4 - visible[w] for w in utiles}
+                u_eff, v = _wait_values(st, hand13, utiles, rem, riichi_on, st.params.tsumo_share)
+                can_win = u_eff > 0
+                u_use = u_eff
+                value = v * st.params.value_scale * (st.params.riichi_value_mult if riichi_on and menzen else 1.0)
+                if _late(st) and _my_rank(st) == 4:
+                    value *= st.params.trail_aggr
             pw = None
             if use_mc and best_s <= st.params.mc_max_shanten:
                 # この局面ではモンテカルロで統一する(評価方法が混ざると比較が崩れる)。遠い候補は和了率0扱い。
@@ -308,7 +321,7 @@ def evaluate_discards(st: StateTracker, forbidden=()) -> List[Candidate]:
                         mc_cache[key] = _mc_pwin(st, c13, melds_n, visible, idx, fixed, mc_seed)
                     pw = mc_cache[key]
             if pw is None:
-                pw = p_win_est(s, u, unseen, st.tiles_left, menzen, can_win, st.params)
+                pw = p_win_est(s, u_use, unseen, st.tiles_left, menzen, can_win, st.params)
                 if rch:
                     pw = min(0.8, pw * st.params.riichi_pw_mult)
             # 攻撃: 今回の危険 + 以降の押しで払う危険

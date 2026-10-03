@@ -29,6 +29,10 @@ class Params:
     call_add: float = 150.0           # 鳴く場合のEV加算しきい値(点)
     kan_max_shanten: int = 2          # このシャンテン以下のときのみカン
     kan_enable: int = 1               # 0でカンしない
+    # 聴牌形の打点を実際の役判定で計算する (0なら従来の概算)
+    real_value: int = 0
+    tsumo_share: float = 0.35         # 和了のうちツモ和了の割合の想定
+    riichi_value_mult: float = 1.15   # 立直の裏ドラ・一発の期待(実計算の点数への倍率)
     # 学習済み守備モデル (majai/defense_model.json)。0なら従来の手作りヒューリスティック
     def_model: int = 0
     threat_min: float = 0.10          # 聴牌確率がこれ以上の相手を警戒対象にする

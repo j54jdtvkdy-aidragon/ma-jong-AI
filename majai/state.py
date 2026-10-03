@@ -46,6 +46,7 @@ class StateTracker:
         self.kans = 0
         self.last_discard = None            # (actor, tile)
         self.last_draw: Optional[str] = None
+        self.rinshan_next = False
         self.pending_riichi = None
         self.seen_after_riichi = [set() for _ in range(4)]  # 立直後に他家が切った牌(現物扱い)
 
@@ -115,7 +116,10 @@ class StateTracker:
                              ev["scores"], [ev["dora_marker"]])
             self.hand = [x for x in ev["tehais"][self.me] if x != "?"]
         elif t == "tsumo":
-            self.draws += 1
+            if self.rinshan_next:
+                self.rinshan_next = False      # 嶺上牌は壁(山)から引かないので残り枚数に数えない
+            else:
+                self.draws += 1
             if ev["actor"] == self.me:
                 self.hand.append(ev["pai"])
                 self.last_draw = ev["pai"]
@@ -143,6 +147,7 @@ class StateTracker:
                     self.hand.remove(x)
             if t == "daiminkan":
                 self.kans += 1
+                self.rinshan_next = True
             self.ippatsu = [False] * 4
         elif t == "ankan":
             a = ev["actor"]
@@ -151,6 +156,7 @@ class StateTracker:
                 for x in ev["consumed"]:
                     self.hand.remove(x)
             self.kans += 1
+            self.rinshan_next = True
             self.ippatsu = [False] * 4
         elif t == "kakan":
             a = ev["actor"]
@@ -162,6 +168,8 @@ class StateTracker:
             if a == self.me:
                 self.hand.remove(ev["pai"])
             self.kans += 1
+            self.rinshan_next = True
+            self.ippatsu = [False] * 4
         elif t == "dora":
             self.dora_markers.append(ev["dora_marker"])
         elif t == "reach":

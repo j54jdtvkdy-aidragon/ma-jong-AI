@@ -1,6 +1,6 @@
 """対局用プレイヤー。discard / call の2メソッドを持つ。"""
 import random
-from .agent import choose_discard, choose_call, evaluate_discards, call_options
+from .agent import choose_discard, choose_call, choose_self_kan, choose_daiminkan
 from .shanten import shanten
 from .tiles import str_to_idx, is_red
 
@@ -12,7 +12,13 @@ class AIPlayer:
         c = choose_discard(st, forbidden)
         return {"tile": c["tile"], "riichi": c["riichi"]}
 
+    def kan(self, st):
+        return choose_self_kan(st)
+
     def call(self, st, actor, tile):
+        k = choose_daiminkan(st, actor, tile)
+        if k:
+            return k
         r = choose_call(st, actor, tile)
         return r[0] if r else None
 
@@ -46,6 +52,9 @@ class EfficiencyPlayer:
     def call(self, st, actor, tile):
         return None
 
+    def kan(self, st):
+        return None
+
 
 class RandomPlayer:
     name = "random"
@@ -58,4 +67,27 @@ class RandomPlayer:
         return {"tile": self.rng.choice(ok), "riichi": False}
 
     def call(self, st, actor, tile):
+        return None
+
+    def kan(self, st):
+        return None
+
+
+class KanHappyPlayer(EfficiencyPlayer):
+    """テスト用: カンできるときは常にカンする(エンジンのカン処理の網羅確認)。"""
+    name = "kanhappy"
+
+    def kan(self, st):
+        from .agent import self_kan_options
+        o = self_kan_options(st)
+        return o[0] if o else None
+
+    def call(self, st, actor, tile):
+        from .agent import call_options
+        for o in call_options(st, actor, tile):
+            if o["type"] == "daiminkan":
+                return o
+        for o in call_options(st, actor, tile):
+            if o["type"] == "pon":
+                return o        # 加槓の機会を作るためポンもする
         return None

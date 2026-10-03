@@ -81,3 +81,19 @@ def _shanten(counts: tuple, melds: int) -> int:
 def shanten(counts34, melds: int = 0) -> int:
     """counts34: 閉じた手牌の34種カウント(13-3*melds枚 or +1枚)。0=聴牌, -1=和了形。"""
     return _shanten(tuple(counts34), melds)
+
+
+def tenpai_waits(counts34, melds: int = 0) -> frozenset:
+    """聴牌形(13-3*melds枚)の待ち牌(34idx)。聴牌でなければ空。"""
+    c = list(counts34)
+    if shanten(c, melds) != 0:
+        return frozenset()
+    out = set()
+    for t in range(34):
+        if c[t] >= 4:
+            continue
+        c[t] += 1
+        if shanten(c, melds) == -1:
+            out.add(t)
+        c[t] -= 1
+    return frozenset(out)

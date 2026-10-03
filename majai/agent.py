@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from math import comb
 from typing import List, Optional
 
-from .shanten import shanten
+from .shanten import shanten, tenpai_waits
 from .state import StateTracker
 from .tiles import str_to_idx, idx_to_str, is_red, is_terminal_or_honor, suit_num
 
@@ -290,6 +290,8 @@ def call_options(st: StateTracker, actor: int, tile: str):
     by_idx = {}
     for t in hand:
         by_idx.setdefault(str_to_idx(t), []).append(t)
+    if len(by_idx.get(idx, [])) >= 3 and st.kans < 4:
+        out.append({"type": "daiminkan", "consumed": sorted(by_idx[idx], key=lambda x: is_red(x))[:3]})
     if len(by_idx.get(idx, [])) >= 2:
         cons = sorted(by_idx[idx], key=lambda x: is_red(x))[:2]   # 赤を残す…ではなく赤を使うかは別候補
         out.append({"type": "pon", "consumed": cons})
@@ -364,7 +366,7 @@ def evaluate_pass(st: StateTracker) -> dict:
 
 def choose_call(st: StateTracker, actor: int, tile: str):
     """鳴く価値があれば (opt, candidate) を、なければ None。"""
-    opts = call_options(st, actor, tile)
+    opts = [o for o in call_options(st, actor, tile) if o["type"] != "daiminkan"]
     if not opts or st.riichi[st.me] or st.tiles_left < 4:
         return None
     base = evaluate_pass(st)
@@ -378,4 +380,117 @@ def choose_call(st: StateTracker, actor: int, tile: str):
     if best and best[1].ev > base["ev"] * 1.15 + 150 and (
             best[1].shanten < base["shanten"] or (not base["can_win"] and best[1].shanten <= base["shanten"])):
         return best
+    return None
+
+
+# ---------------- カン ----------------
+KAN_NAME = {"ankan": "暗槓", "kakan": "加槓", "daiminkan": "大明槓"}
+
+
+def self_kan_options(st: StateTracker):
+    """自分のツモ番(14枚)で可能な暗槓・加槓。立直後は、ツモ牌での暗槓かつ待ちが変わらない場合のみ。"""
+    me = st.me
+    if st.kans >= 4 or st.tiles_left < 1 or st.last_draw is None or len(st.hand) % 3 != 2:
+        return []
+    by_idx = {}
+    for t in st.hand:
+        by_idx.setdefault(str_to_idx(t), []).append(t)
+    counts = st.hand_counts()
+    mn = len(st.melds[me])
+    opts = []
+    if st.riichi_accepted[me]:
+        d = str_to_idx(st.last_draw)
+        if len(by_idx.get(d, [])) == 4:
+            before = counts[:]
+            before[d] -= 1
+            w1 = tenpai_waits(before, mn)
+            after = counts[:]
+            after[d] -= 4
+            w2 = tenpai_waits(after, mn + 1)
+            if w1 and w1 == w2:
+                opts.append({"type": "ankan", "consumed": list(by_idx[d])})
+        return opts
+    for i, ts in by_idx.items():
+        if len(ts) == 4:
+            opts.append({"type": "ankan", "consumed": list(ts)})
+    for m in st.melds[me]:
+        if m.kind == "pon":
+            i = str_to_idx(m.tiles[0])
+            if by_idx.get(i):
+                opts.append({"type": "kakan", "pai": by_idx[i][0], "consumed": list(m.tiles)})
+    return opts
+
+
+def _best_discard_shanten(counts, mn):
+    best = 8
+    for i in range(34):
+        if counts[i]:
+            counts[i] -= 1
+            best = min(best, shanten(counts, mn))
+            counts[i] += 1
+    return best
+
+
+def _leader_protect(st: StateTracker) -> bool:
+    last = st.bakaze in "SW" and st.kyoku == 4
+    if not last:
+        return False
+    others = sorted((s for i, s in enumerate(st.scores) if i != st.me), reverse=True)
+    return st.scores[st.me] - others[0] >= 8000
+
+
+def kan_judgement(st: StateTracker, opt: dict):
+    """(カンすべきか, 理由)。暗槓/加槓/大明槓すべてに使う。"""
+    me, kind = st.me, opt["type"]
+    counts = st.hand_counts()
+    mn = len(st.melds[me])
+    ths = threats(st)
+    if kind == "daiminkan":
+        i = str_to_idx(opt["consumed"][0])
+        if st.is_menzen():
+            return False, "大明槓は門前を崩し、立直・ツモ・裏ドラの打点と守備力を失うため、門前では見送ります。"
+        counts[i] -= 3
+        s_after = shanten(counts, mn + 1)
+        counts[i] += 3
+        s_before = shanten(counts, mn)
+    elif kind == "ankan":
+        i = str_to_idx(opt["consumed"][0])
+        if st.riichi_accepted[me]:
+            return True, "立直中で待ちが変わらない暗槓です。ドラ・裏ドラが増え、嶺上牌でツモ和了のチャンスも得られます。"
+        s_before = _best_discard_shanten(counts, mn)
+        counts[i] -= 4
+        s_after = shanten(counts, mn + 1)
+    else:
+        i = str_to_idx(opt["pai"])
+        s_before = _best_discard_shanten(counts, mn)
+        counts[i] -= 1
+        s_after = shanten(counts, mn)
+    if ths:
+        who = "立直・仕掛け中の相手がいる状況では、新ドラが相手に乗る危険"
+        if kind == "kakan":
+            who += "と槍槓で放銃する危険"
+        return False, who + "が大きく、カンは見送る方が期待値が高いです。"
+    if _leader_protect(st):
+        return False, "オーラスでトップ目なので、カンドラで局が荒れるリスクを避けて見送ります。"
+    if s_after > s_before:
+        return False, f"カンするとシャンテン数が{s_before}→{s_after}に後退します。"
+    if s_after > 2:
+        return False, "手がまだ遠い(3シャンテン以上)ので、カンで相手にドラを与えるより手を進めます。"
+    return True, ("カンしても手が進み(または維持し)、場に脅威がないので、"
+                  "カンドラ・符の増加・嶺上牌ツモの利益が相手にドラを与える損を上回ります。")
+
+
+def choose_self_kan(st: StateTracker):
+    for o in self_kan_options(st):
+        if kan_judgement(st, o)[0]:
+            return o
+    return None
+
+
+def choose_daiminkan(st: StateTracker, actor: int, tile: str):
+    if st.riichi[st.me] or st.tiles_left < 2:
+        return None
+    for o in call_options(st, actor, tile):
+        if o["type"] == "daiminkan" and kan_judgement(st, o)[0]:
+            return o
     return None

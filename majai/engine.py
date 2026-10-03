@@ -1,6 +1,7 @@
 """雀魂(段位戦)ルールに準拠した四人麻雀の対局シミュレータ。
  - 25000点持ち/30000点返し、東南戦(西入あり)、赤3枚、喰いタンあり、ダブロンあり、トビ終了、オーラスのアガリ止め
- - 未実装(v1): 槓(暗槓/明槓/加槓)、流し満貫、途中流局(九種九牌・四風連打・四家立直・四開槓)、パオ、頭ハネ以外の細則
+ - 槓: 暗槓/加槓/大明槓、嶺上開花、槍槓(加槓のみ)、カンドラ(暗槓は即時、明槓/加槓は打牌後)、四開槓流局
+ - 未実装: 流し満貫、途中流局(九種九牌・四風連打・四家立直)、パオ、頭ハネ以外の細則
  出力は mjai 形式のイベント列で、レビュー機能に直接渡せる。"""
 import random
 from typing import List, Optional
@@ -11,11 +12,12 @@ from mahjong.hand_calculating.hand import HandCalculator
 from mahjong.hand_calculating.hand_config import HandConfig, OptionalRules
 from mahjong.meld import Meld as LMeld
 
-from .agent import call_options
+from .agent import call_options, self_kan_options
 from .shanten import shanten
 from .state import StateTracker
 from .tiles import id_to_str, str_to_idx, is_red
 
+KANS = ('ankan', 'kakan', 'daiminkan')
 _CALC = HandCalculator()
 _OPTS = OptionalRules(has_open_tanyao=True, has_aka_dora=True, has_double_yakuman=True, kiriage=True)
 _WINDS = [EAST, SOUTH, WEST, NORTH]
@@ -43,6 +45,9 @@ class Round:
         self.ippatsu = [False] * 4
         self.first_turn = True
         self.any_call = False
+        self.dora_n = 1
+        self.rin = 0
+        self.pending_dora = 0
 
     # --- 手牌ユーティリティ ---
     def closed_counts(self, p):
@@ -69,19 +74,25 @@ class Round:
         mine = {t // 4 for t in self.discards[p]}
         return any(x in mine for x in w)
 
-    def hand_value(self, p, win_tile, tsumo, haitei):
+    def kan_count(self, p=None):
+        ps = range(4) if p is None else [p]
+        return sum(1 for q in ps for m in self.melds[q] if m[0] in KANS)
+
+    def hand_value(self, p, win_tile, tsumo, haitei, rinshan=False, chankan=False):
         ids = list(self.hands[p])
         if not tsumo:
             ids = ids + [win_tile]
         lm = []
         for kind, tiles, called, tgt in self.melds[p]:
             ids += tiles
-            lm.append(LMeld(meld_type=LMeld.CHI if kind == "chi" else LMeld.PON, tiles=tiles, opened=True))
-        dora = [self.dead[4]]
+            mt = LMeld.CHI if kind == "chi" else LMeld.PON if kind == "pon" else LMeld.KAN
+            lm.append(LMeld(meld_type=mt, tiles=tiles, opened=kind != "ankan"))
+        dora = list(self.dead[4:4 + self.dora_n])
         if self.riichi[p]:
-            dora.append(self.dead[9])
+            dora += self.dead[9:9 + self.dora_n]
         cfg = HandConfig(
             is_tsumo=tsumo, is_riichi=self.riichi[p], is_ippatsu=self.ippatsu[p],
+            is_rinshan=rinshan, is_chankan=chankan,
             is_haitei=tsumo and haitei, is_houtei=(not tsumo) and haitei,
             is_tenhou=tsumo and self.first_turn and p == self.oya and not self.any_call,
             is_chiihou=tsumo and self.first_turn and p != self.oya and not self.any_call and not self.discards[p],
@@ -140,6 +151,17 @@ def play_game(players, seed=None, log=None):
     return {"scores": scores, "ranks": ranks, "events": ev}
 
 
+def _reveal_dora(rd, emit):
+    rd.dora_n += 1
+    emit({"type": "dora", "dora_marker": id_to_str(rd.dead[3 + rd.dora_n])})
+
+
+def _after_kan(rd):
+    """カンの後始末: 王牌を補充(壁を1枚減らす)。"""
+    if rd.live:
+        rd.dead.append(rd.live.pop())
+
+
 def _play_round(players, trackers, emit, rd: Round, scores):
     scores = list(scores)
     oya = rd.oya
@@ -149,21 +171,37 @@ def _play_round(players, trackers, emit, rd: Round, scores):
           "tehais": [[id_to_str(t) for t in h] for h in rd.hands]})
     cur = oya
     drew = True
+    rinshan = False
     forbidden = set()
     while True:
         if drew:
-            if not rd.live:
-                return _ryukyoku(rd, emit, scores)
-            tile = rd.live.pop(0)
+            if rinshan:
+                tile = rd.dead[rd.rin]
+                rd.rin += 1
+            else:
+                if not rd.live:
+                    return _ryukyoku(rd, emit, scores)
+                tile = rd.live.pop(0)
             rd.hands[cur].append(tile)
             emit({"type": "tsumo", "actor": cur, "pai": id_to_str(tile)})
-            # ツモ和了
-            haitei = not rd.live
-            r = rd.hand_value(cur, tile, True, haitei)
+            haitei = not rd.live and not rinshan
+            r = rd.hand_value(cur, tile, True, haitei, rinshan=rinshan)
             if r:
                 return _settle_win(rd, emit, scores, [cur], None, {cur: r}, tsumo=True)
-        # 打牌選択
+        # カン判断 (暗槓/加槓)
         tg = trackers[cur]
+        if drew and rd.live and rd.kan_count() < 4:
+            opts = self_kan_options(tg)
+            kopt = players[cur].kan(tg) if opts else None
+            if kopt is not None:
+                res = _do_self_kan(players, trackers, emit, rd, scores, cur, kopt, opts)
+                if res is not None:
+                    return res
+                rinshan = True
+                forbidden = set()
+                continue
+        rinshan = False
+        # 打牌選択
         riichi_decl = False
         if rd.riichi[cur]:
             dtile = rd.hands[cur][-1]
@@ -185,14 +223,16 @@ def _play_round(players, trackers, emit, rd: Round, scores):
         rd.discards[cur].append(dtile)
         rd.ippatsu[cur] = False
         emit({"type": "dahai", "actor": cur, "pai": id_to_str(dtile), "tsumogiri": tsumogiri})
+        while rd.pending_dora:           # 明槓・加槓のカンドラは打牌後にめくる
+            rd.pending_dora -= 1
+            _reveal_dora(rd, emit)
         rd.first_turn = rd.first_turn and cur != (oya + 3) % 4
         # ロン判定
         winners = {}
         for k in range(1, 4):
             p = (cur + k) % 4
-            if rd.riichi[p] or True:
-                if rd.is_furiten(p):
-                    continue
+            if rd.is_furiten(p):
+                continue
             r = rd.hand_value(p, dtile, False, not rd.live)
             if r:
                 winners[p] = r
@@ -207,16 +247,18 @@ def _play_round(players, trackers, emit, rd: Round, scores):
             scores[cur] -= 1000
             rd.kyotaku += 1
             emit({"type": "reach_accepted", "actor": cur, "scores": list(scores)})
+        if rd.kan_count() == 4 and max(rd.kan_count(p) for p in range(4)) < 4:
+            return _ryukyoku(rd, emit, scores, reason="suukaikan")
         if not rd.live:
             return _ryukyoku(rd, emit, scores)
-        # 鳴き
+        # 鳴き (ロン > ポン/大明槓 > チー)
         called = None
         for k in (1, 2, 3):
             p = (cur + k) % 4
             if rd.riichi[p]:
                 continue
             opt = players[p].call(trackers[p], cur, id_to_str(dtile))
-            if opt and opt["type"] == "pon":
+            if opt and opt["type"] in ("pon", "daiminkan"):
                 called = (p, opt)
                 break
             if opt and opt["type"] == "chi" and k == 1 and called is None:
@@ -225,8 +267,8 @@ def _play_round(players, trackers, emit, rd: Round, scores):
             p, opt = called
             ids = []
             hand = list(rd.hands[p])
-            for s in opt["consumed"]:
-                t = next(x for x in hand if id_to_str(x) == s)
+            for s_ in opt["consumed"]:
+                t = next(x for x in hand if id_to_str(x) == s_)
                 hand.remove(t)
                 ids.append(t)
             rd.hands[p] = hand
@@ -235,11 +277,59 @@ def _play_round(players, trackers, emit, rd: Round, scores):
             rd.ippatsu = [False] * 4
             emit({"type": opt["type"], "actor": p, "target": cur, "pai": id_to_str(dtile),
                   "consumed": opt["consumed"]})
+            if opt["type"] == "daiminkan":
+                rd.pending_dora += 1
+                _after_kan(rd)
+                cur, drew, rinshan = p, True, True
+                continue
             from .agent import _kuikae
-            forbidden = _kuikae({**opt, "pair": tuple(sorted(str_to_idx(s) for s in opt["consumed"]))}, dtile // 4)
+            forbidden = _kuikae({**opt, "pair": tuple(sorted(str_to_idx(s_) for s_ in opt["consumed"]))}, dtile // 4)
             cur, drew = p, False
         else:
             cur, drew = (cur + 1) % 4, True
+
+
+def _do_self_kan(players, trackers, emit, rd, scores, cur, kopt, opts):
+    """暗槓/加槓を実行。槍槓で終局した場合は結果dictを、続行なら None を返す。"""
+    if not any(o["type"] == kopt["type"] and o["consumed"] == kopt["consumed"] for o in opts):
+        raise ValueError(f"illegal kan {kopt}")
+    rd.any_call = True
+    rd.ippatsu = [False] * 4
+    if kopt["type"] == "ankan":
+        ids = []
+        hand = list(rd.hands[cur])
+        for s_ in kopt["consumed"]:
+            t = next(x for x in hand if id_to_str(x) == s_)
+            hand.remove(t)
+            ids.append(t)
+        rd.hands[cur] = hand
+        rd.melds[cur].append(("ankan", ids, None, None))
+        emit({"type": "ankan", "actor": cur, "consumed": kopt["consumed"]})
+        _reveal_dora(rd, emit)
+        _after_kan(rd)
+        return None
+    # 加槓
+    t = next(x for x in rd.hands[cur] if id_to_str(x) == kopt["pai"])
+    rd.hands[cur].remove(t)
+    for k, m in enumerate(rd.melds[cur]):
+        if m[0] == "pon" and m[1][0] // 4 == t // 4:
+            rd.melds[cur][k] = ("kakan", m[1] + [t], m[2], m[3])
+            break
+    emit({"type": "kakan", "actor": cur, "pai": kopt["pai"], "consumed": kopt["consumed"]})
+    winners = {}
+    for k in range(1, 4):
+        p = (cur + k) % 4
+        if rd.is_furiten(p):
+            continue
+        r = rd.hand_value(p, t, False, False, chankan=True)
+        if r:
+            winners[p] = r
+    if winners:
+        order = [p for p in ((cur + k) % 4 for k in range(1, 4)) if p in winners]
+        return _settle_win(rd, emit, scores, order, cur, winners, tsumo=False)
+    rd.pending_dora += 1
+    _after_kan(rd)
+    return None
 
 
 def _settle_win(rd, emit, scores, order, loser, results, tsumo):
@@ -273,7 +363,7 @@ def _settle_win(rd, emit, scores, order, loser, results, tsumo):
         emit({"type": "hora", "actor": w, "target": w if tsumo else loser, "deltas": list(deltas),
               "scores": list(new_scores), "han": results[w].han, "fu": results[w].fu,
               "yaku": [str(y) for y in results[w].yaku],
-              "ura_markers": [id_to_str(rd.dead[9])] if rd.riichi[w] else []})
+              "ura_markers": [id_to_str(rd.dead[9 + k]) for k in range(rd.dora_n)] if rd.riichi[w] else []})
     renchan = rd.oya in order
     return {"scores": new_scores, "kyotaku": 0, "renchan": renchan,
             "honba": rd.honba + 1 if renchan else 0}

@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 from .agent import (Candidate, evaluate_discards, call_options, choose_call, evaluate_pass,
-                    evaluate_call, threats, _kuikae)
+                    evaluate_call, threats, _kuikae, self_kan_options, kan_judgement, KAN_NAME)
 from .state import StateTracker
 from .tiles import str_to_idx, idx_to_str, is_red
 
@@ -156,7 +156,47 @@ def review_events(events, me: int) -> List[Decision]:
     return out
 
 
+def _kan_loss(st, did: bool, ok: bool) -> float:
+    """カン判断のミス損失(点数換算の目安)。"""
+    if did and not ok:
+        return 600.0 if threats(st) else 300.0
+    return 200.0
+
+
+def _review_kan(st, events, i, out) -> bool:
+    """自分のツモ番でのカン判断をレビュー。カンを実行していれば True。"""
+    opts = self_kan_options(st)
+    nxt = events[i + 1] if i + 1 < len(events) else None
+    did_ev = nxt if nxt and nxt["type"] in ("ankan", "kakan") and nxt["actor"] == st.me else None
+    if not opts and not did_ev:
+        return False
+    if did_ev:
+        o = next((x for x in opts if x["type"] == did_ev["type"] and (
+            did_ev["type"] == "ankan" and str_to_idx(x["consumed"][0]) == str_to_idx(did_ev["consumed"][0])
+            or did_ev["type"] == "kakan" and str_to_idx(x["pai"]) == str_to_idx(did_ev["pai"]))), None)
+        if o is None:
+            return True
+        ok, why = kan_judgement(st, o)
+        if not ok:
+            loss = _kan_loss(st, True, ok)
+            out.append(Decision("kan", _label(st), _turn_no(st), hand_str(st.hand),
+                                f"{KAN_NAME[o['type']]} {jp(o.get('pai') or o['consumed'][0])}", "カンしない",
+                                loss, _severity(loss), [why], False))
+        return True
+    for o in opts:
+        ok, why = kan_judgement(st, o)
+        if ok:
+            loss = _kan_loss(st, False, ok)
+            out.append(Decision("kan", _label(st), _turn_no(st), hand_str(st.hand),
+                                "カンしない", f"{KAN_NAME[o['type']]} {jp(o.get('pai') or o['consumed'][0])}",
+                                loss, _severity(loss), [why], False))
+            break
+    return False
+
+
 def _review_discard(st, events, i, out, forb):
+    if not forb and _review_kan(st, events, i, out):
+        return
     if st.riichi_accepted[st.me]:
         return
     j, riichi = i + 1, False
@@ -186,12 +226,27 @@ def _review_call(st, events, i, out, e):
     me = st.me
     if st.riichi[me] or st.tiles_left < 4:
         return
-    opts = call_options(st, e["actor"], e["pai"])
-    if not opts:
+    allopts = call_options(st, e["actor"], e["pai"])
+    if not allopts:
         return
     nxt = events[i + 1] if i + 1 < len(events) else None
     if nxt and nxt["type"] in ("chi", "pon", "daiminkan", "hora") and nxt.get("actor") != me:
         return        # 他家が優先
+    kan_opt = next((o for o in allopts if o["type"] == "daiminkan"), None)
+    if kan_opt:
+        did_kan = bool(nxt and nxt["type"] == "daiminkan" and nxt["actor"] == me)
+        ok, why = kan_judgement(st, kan_opt)
+        if did_kan != ok:
+            loss = _kan_loss(st, did_kan, ok)
+            out.append(Decision("kan", _label(st), _turn_no(st), hand_str(st.hand),
+                                f"大明槓 {jp(e['pai'])}" if did_kan else "スルー",
+                                "スルー" if did_kan else f"大明槓 {jp(e['pai'])}",
+                                loss, _severity(loss), [why], False))
+        if did_kan:
+            return
+    opts = [o for o in allopts if o["type"] != "daiminkan"]
+    if not opts:
+        return
     did = nxt is not None and nxt["type"] in ("chi", "pon") and nxt["actor"] == me
     rec = choose_call(st, e["actor"], e["pai"])
     base = evaluate_pass(st)
@@ -229,7 +284,7 @@ def format_report(decisions: List[Decision], top: int = 10, show_all: bool = Fal
     lines = [f"■ レビュー結果: 判断{n}回 / AIと一致または同等 {agree}回 ({agree / max(n, 1) * 100:.0f}%) / 問題の判断 {len(bad)}回",
              f"  損失合計(AI評価・点数換算): {sum(d.loss for d in bad):.0f}点相当", ""]
     for k, d in enumerate(bad if show_all else bad[:top], 1):
-        lines.append(f"[{k}] {d.round_label} {d.turn}巡目 【{d.severity}】 損失≈{d.loss:.0f}点  ({'打牌' if d.kind == 'discard' else '鳴き'})")
+        lines.append(f"[{k}] {d.round_label} {d.turn}巡目 【{d.severity}】 損失≈{d.loss:.0f}点  ({ {'discard': '打牌', 'call': '鳴き', 'kan': 'カン'}[d.kind] })")
         lines.append(f"    手牌: {d.hand}")
         lines.append(f"    あなた: {d.actual}   AI推奨: {d.best}")
         for r in d.reasons:

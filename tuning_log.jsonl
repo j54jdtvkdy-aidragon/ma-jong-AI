@@ -24,3 +24,14 @@
 {"stage": 1, "round": 0, "cand": "c22", "avg_rank": 2.5, "se": 0.114, "t": 327}
 {"stage": 1, "round": 0, "cand": "c23", "avg_rank": 2.52, "se": 0.118, "t": 340}
 {"stage": 2, "round": 0, "cand": "c20", "avg_rank_cum": 2.485, "t": 382}
+{"stage": 2, "round": 0, "cand": "c2", "avg_rank_cum": 2.498, "t": 426}
+{"stage": 2, "round": 0, "cand": "c6", "avg_rank_cum": 2.415, "t": 468}
+{"stage": 2, "round": 0, "cand": "c3", "avg_rank_cum": 2.5, "t": 511}
+{"stage": 2, "round": 0, "cand": "c0", "avg_rank_cum": 2.43, "t": 554}
+{"stage": 2, "round": 0, "cand": "c18", "avg_rank_cum": 2.44, "t": 597}
+{"stage": 2, "round": 0, "cand": "center", "avg_rank_cum": 2.49, "t": 639}
+{"stage": 3, "round": 0, "cand": "c6", "avg_rank_cum": 2.42, "t": 723}
+{"stage": 3, "round": 0, "cand": "c0", "avg_rank_cum": 2.457, "t": 808}
+{"stage": 3, "round": 0, "cand": "c18", "avg_rank_cum": 2.4, "t": 893}
+{"stage": 3, "round": 0, "cand": "center", "avg_rank_cum": 2.463, "t": 979}
+{"stage": "round_best", "round": 0, "cand": "c18", "avg_rank_cum": 2.4, "params": {"riichi_extra_han": 0.3128867877298818, "menzen_yaku_han": 0.4, "yakuhai_pair_han": 0.2334239919277958, "value_scale": 1.0, "pwin_scale": 0.9611037677392062, "open_boost": 1.35, "riichi_pw_mult": 1.05, "danger_scale": 1.0, "loss_scale": 0.8500047433400212, "future_scale": 0.7920549759140926, "fold_cost": 778.7174408334696, "fold_risk": 0.0, "open_threat3": 0.719723477852368, "open_threat2": 0.35, "call_mult": 1.0864083949221353, "call_add": 150.0, "kan_max_shanten": 2, "kan_enable": 1, "lead_defense": 1.0, "trail_aggr": 1.123115779858422}, "t": 979}

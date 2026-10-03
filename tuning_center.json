@@ -1,0 +1,22 @@
+{
+ "riichi_extra_han": 0.4922043384276504,
+ "menzen_yaku_han": 0.3301606561200761,
+ "yakuhai_pair_han": 0.2742255947530673,
+ "value_scale": 1.132939694518963,
+ "pwin_scale": 0.8612006686163975,
+ "open_boost": 1.35,
+ "riichi_pw_mult": 1.1156116502231965,
+ "danger_scale": 0.9042719910979145,
+ "loss_scale": 0.8997541884353788,
+ "future_scale": 0.5976888067044553,
+ "fold_cost": 716.1663365417552,
+ "fold_risk": 0.013999999999999999,
+ "open_threat3": 0.679525759906064,
+ "open_threat2": 0.35000000000000003,
+ "call_mult": 1.1044761224137805,
+ "call_add": 190.653587186329,
+ "kan_max_shanten": 2,
+ "kan_enable": 1,
+ "lead_defense": 1.0,
+ "trail_aggr": 1.0557720072600258
+}

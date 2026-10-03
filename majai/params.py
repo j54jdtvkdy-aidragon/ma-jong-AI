@@ -31,7 +31,7 @@ class Params:
     kan_enable: int = 1               # 0でカンしない
     # モンテカルロ和了率 (mc_rollouts=0 で無効=従来の幾何分布近似)
     mc_rollouts: int = 0              # 候補ごとのシミュレーション回数
-    mc_max_shanten: int = 2           # このシャンテン以下の候補にだけ使う
+    mc_max_shanten: int = 3           # 最善手がこのシャンテン以下の局面でだけ使う
     mc_scale: float = 1.0             # MC和了率の倍率
     mc_hazard: float = 0.16           # 毎巡、他家の和了などで局が終わる確率(自己対戦で較正)
     mc_ron_riichi: float = 0.8        # 立直時に、待ち牌が他家から出たときロンできる割合(較正)

@@ -285,14 +285,18 @@ def evaluate_discards(st: StateTracker, forbidden=()) -> List[Candidate]:
             if _late(st) and _my_rank(st) == 4:
                 value *= st.params.trail_aggr
             pw = None
-            if use_mc and can_win and s <= min(best_s + 1, st.params.mc_max_shanten):
-                fixed = rch or st.riichi[st.me]
-                key = (idx, fixed)
-                if key not in mc_cache:
-                    c13 = counts[:]
-                    c13[idx] -= 1
-                    mc_cache[key] = _mc_pwin(st, c13, melds_n, visible, idx, fixed, mc_seed)
-                pw = mc_cache[key]
+            if use_mc and best_s <= st.params.mc_max_shanten:
+                # この局面ではモンテカルロで統一する(評価方法が混ざると比較が崩れる)。遠い候補は和了率0扱い。
+                if not can_win or s > best_s + 2:
+                    pw = 0.0
+                else:
+                    fixed = rch or st.riichi[st.me]
+                    key = (idx, fixed)
+                    if key not in mc_cache:
+                        c13 = counts[:]
+                        c13[idx] -= 1
+                        mc_cache[key] = _mc_pwin(st, c13, melds_n, visible, idx, fixed, mc_seed)
+                    pw = mc_cache[key]
             if pw is None:
                 pw = p_win_est(s, u, unseen, st.tiles_left, menzen, can_win, st.params)
                 if rch:
@@ -425,8 +429,8 @@ def evaluate_pass(st: StateTracker) -> dict:
         han += 1.0
     value = han_to_points(han, st.me == st.oya) * st.params.value_scale
     pw = None
-    if st.params.mc_rollouts > 0 and (sure or menzen) and s <= st.params.mc_max_shanten:
-        pw = _mc_pwin(st, counts, melds_n, visible, None, st.riichi[st.me],
+    if st.params.mc_rollouts > 0 and s <= st.params.mc_max_shanten + 1:
+        pw = 0.0 if not (sure or menzen) else _mc_pwin(st, counts, melds_n, visible, None, st.riichi[st.me],
                       hash((st.me, st.draws, tuple(counts))) & 0xFFFFFFFF)
     if pw is None:
         pw = p_win_est(s, u, unseen, st.tiles_left - 2, menzen, sure or menzen, st.params)

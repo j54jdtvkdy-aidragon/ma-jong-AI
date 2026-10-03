@@ -177,3 +177,6 @@
 {"stage": 2, "gen": 2, "round": 1, "cand": "c4", "avg_rank_cum": 2.498, "t": 4986}
 {"stage": 2, "gen": 2, "round": 1, "cand": "c13", "avg_rank_cum": 2.513, "t": 5024}
 {"stage": 3, "gen": 2, "round": 1, "cand": "c3", "avg_rank_cum": 2.454, "t": 5105}
+{"stage": 3, "gen": 2, "round": 1, "cand": "c0", "avg_rank_cum": 2.467, "t": 5186}
+{"stage": 3, "gen": 2, "round": 1, "cand": "c17", "avg_rank_cum": 2.452, "t": 5265}
+{"stage": "round_best", "gen": 2, "round": 1, "cand": "c17", "avg_rank_cum": 2.452, "t": 5265}

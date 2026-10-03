@@ -109,3 +109,34 @@
 {"stage": 3, "round": 2, "cand": "c18", "avg_rank_cum": 2.416, "t": 2882}
 {"stage": 3, "round": 2, "cand": "center", "avg_rank_cum": 2.413, "t": 2967}
 {"stage": "round_best", "round": 2, "cand": "c0", "avg_rank_cum": 2.363, "params": {"riichi_extra_han": 0.3232757125347355, "menzen_yaku_han": 0.46063196011598473, "yakuhai_pair_han": 0.18478401210637838, "value_scale": 1.3354498906838221, "pwin_scale": 0.7832125878637827, "open_boost": 1.4553614957467125, "riichi_pw_mult": 1.1160927508561824, "danger_scale": 0.9895693932052988, "loss_scale": 0.9778791244462982, "future_scale": 0.018575844603040723, "fold_cost": 776.578737471391, "fold_risk": 0.026906998779002368, "open_threat3": 0.679525759906064, "open_threat2": 0.2951014645101612, "call_mult": 1.1453275766595332, "call_add": 127.911697320217, "kan_max_shanten": 2, "kan_enable": 1, "lead_defense": 0.9461655766684312, "trail_aggr": 1.0122953526428542}, "t": 2967}
+{"stage": 1, "round": 3, "cand": "center", "avg_rank": 2.42, "se": 0.106, "t": 2982}
+{"stage": 1, "round": 3, "cand": "c0", "avg_rank": 2.45, "se": 0.104, "t": 2997}
+{"stage": 1, "round": 3, "cand": "c1", "avg_rank": 2.33, "se": 0.104, "t": 3011}
+{"stage": 1, "round": 3, "cand": "c2", "avg_rank": 2.44, "se": 0.102, "t": 3025}
+{"stage": 1, "round": 3, "cand": "c3", "avg_rank": 2.47, "se": 0.109, "t": 3039}
+{"stage": 1, "round": 3, "cand": "c4", "avg_rank": 2.45, "se": 0.106, "t": 3054}
+{"stage": 1, "round": 3, "cand": "c5", "avg_rank": 2.39, "se": 0.11, "t": 3068}
+{"stage": 1, "round": 3, "cand": "c6", "avg_rank": 2.5, "se": 0.11, "t": 3082}
+{"stage": 1, "round": 3, "cand": "c7", "avg_rank": 2.46, "se": 0.111, "t": 3096}
+{"stage": 1, "round": 3, "cand": "c8", "avg_rank": 2.43, "se": 0.106, "t": 3111}
+{"stage": 1, "round": 3, "cand": "c9", "avg_rank": 2.38, "se": 0.106, "t": 3125}
+{"stage": 1, "round": 3, "cand": "c10", "avg_rank": 2.46, "se": 0.106, "t": 3140}
+{"stage": 1, "round": 3, "cand": "c11", "avg_rank": 2.53, "se": 0.109, "t": 3154}
+{"stage": 1, "round": 3, "cand": "c12", "avg_rank": 2.45, "se": 0.106, "t": 3168}
+{"stage": 1, "round": 3, "cand": "c13", "avg_rank": 2.37, "se": 0.108, "t": 3183}
+{"stage": 1, "round": 3, "cand": "c14", "avg_rank": 2.54, "se": 0.11, "t": 3197}
+{"stage": 1, "round": 3, "cand": "c15", "avg_rank": 2.45, "se": 0.106, "t": 3211}
+{"stage": 1, "round": 3, "cand": "c16", "avg_rank": 2.47, "se": 0.109, "t": 3225}
+{"stage": 1, "round": 3, "cand": "c17", "avg_rank": 2.48, "se": 0.104, "t": 3239}
+{"stage": 1, "round": 3, "cand": "c18", "avg_rank": 2.5, "se": 0.106, "t": 3254}
+{"stage": 1, "round": 3, "cand": "c19", "avg_rank": 2.51, "se": 0.109, "t": 3268}
+{"stage": 1, "round": 3, "cand": "c20", "avg_rank": 2.44, "se": 0.105, "t": 3282}
+{"stage": 1, "round": 3, "cand": "c21", "avg_rank": 2.48, "se": 0.108, "t": 3296}
+{"stage": 1, "round": 3, "cand": "c22", "avg_rank": 2.42, "se": 0.106, "t": 3311}
+{"stage": 1, "round": 3, "cand": "c23", "avg_rank": 2.5, "se": 0.106, "t": 3325}
+{"stage": 2, "round": 3, "cand": "c1", "avg_rank_cum": 2.342, "t": 3365}
+{"stage": 2, "round": 3, "cand": "c13", "avg_rank_cum": 2.353, "t": 3406}
+{"stage": 2, "round": 3, "cand": "c9", "avg_rank_cum": 2.395, "t": 3446}
+{"stage": 2, "round": 3, "cand": "c5", "avg_rank_cum": 2.4, "t": 3487}
+{"stage": 2, "round": 3, "cand": "center", "avg_rank_cum": 2.375, "t": 3528}
+{"stage": 2, "round": 3, "cand": "c22", "avg_rank_cum": 2.375, "t": 3569}

@@ -140,3 +140,7 @@
 {"stage": 2, "round": 3, "cand": "c5", "avg_rank_cum": 2.4, "t": 3487}
 {"stage": 2, "round": 3, "cand": "center", "avg_rank_cum": 2.375, "t": 3528}
 {"stage": 2, "round": 3, "cand": "c22", "avg_rank_cum": 2.375, "t": 3569}
+{"stage": 3, "round": 3, "cand": "c1", "avg_rank_cum": 2.416, "t": 3652}
+{"stage": 3, "round": 3, "cand": "c13", "avg_rank_cum": 2.415, "t": 3733}
+{"stage": 3, "round": 3, "cand": "center", "avg_rank_cum": 2.43, "t": 3815}
+{"stage": "round_best", "round": 3, "cand": "c13", "avg_rank_cum": 2.415, "params": {"riichi_extra_han": 0.47477050971367174, "menzen_yaku_han": 0.2881797977278326, "yakuhai_pair_han": 0.2093340448709837, "value_scale": 1.1808427072687735, "pwin_scale": 0.876400935910407, "open_boost": 1.4553614957467125, "riichi_pw_mult": 1.2219958534156792, "danger_scale": 0.9127099061464491, "loss_scale": 0.7658415867667447, "future_scale": 0.0, "fold_cost": 718.4180075003253, "fold_risk": 0.028941063902536885, "open_threat3": 0.7974143956700483, "open_threat2": 0.3168559265348755, "call_mult": 1.0658743213492667, "call_add": 60.37347865753998, "kan_max_shanten": 2, "kan_enable": 1, "lead_defense": 1.1416424865412167, "trail_aggr": 1.0375362612134558}, "t": 3815}

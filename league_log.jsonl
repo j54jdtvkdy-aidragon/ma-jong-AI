@@ -81,3 +81,8 @@
 {"stage": 1, "gen": 1, "round": 0, "cand": "c18", "avg_rank": 2.45, "t": 2339}
 {"stage": 1, "gen": 1, "round": 0, "cand": "c19", "avg_rank": 2.48, "t": 2353}
 {"stage": 2, "gen": 1, "round": 0, "cand": "c14", "avg_rank_cum": 2.525, "t": 2394}
+{"stage": 2, "gen": 1, "round": 0, "cand": "c8", "avg_rank_cum": 2.515, "t": 2434}
+{"stage": 2, "gen": 1, "round": 0, "cand": "c2", "avg_rank_cum": 2.538, "t": 2475}
+{"stage": 2, "gen": 1, "round": 0, "cand": "c11", "avg_rank_cum": 2.53, "t": 2514}
+{"stage": 2, "gen": 1, "round": 0, "cand": "c12", "avg_rank_cum": 2.52, "t": 2555}
+{"stage": 3, "gen": 1, "round": 0, "cand": "c8", "avg_rank_cum": 2.509, "t": 2633}

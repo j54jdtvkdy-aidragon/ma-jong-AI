@@ -26,6 +26,7 @@ SPACE = {
     "riichi_bias": (0.0, 3000.0, "lin"), "fold_shanten": (1, 5, "int"),
     "push_danger_limit": (0.03, 1.0, "lin"), "yakuhai_pon_force": (0, 1, "int"),
     "sure_yaku_call_force": (0, 1, "int"), "threat_min": (0.03, 0.4, "lin"),
+    "tsumo_share": (0.1, 0.6, "lin"), "riichi_value_mult": (0.9, 1.5, "lin"),
 }
 
 

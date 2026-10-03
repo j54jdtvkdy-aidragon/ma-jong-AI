@@ -120,3 +120,13 @@
 {"stage": 3, "gen": 1, "round": 1, "cand": "c6", "avg_rank_cum": 2.471, "t": 3094}
 {"stage": "round_best", "gen": 1, "round": 1, "cand": "c1", "avg_rank_cum": 2.46, "t": 3094}
 {"stage": "gen_result", "gen": 1, "vs_champ": 2.503, "se": 0.026, "dist": [0.264, 0.244, 0.218, 0.275], "champ_vs_eff+": 2.47, "chall_vs_eff+": 2.505, "accepted": false, "params": {"riichi_extra_han": 0.620576219737367, "menzen_yaku_han": 0.4596600345291277, "yakuhai_pair_han": 0.29878220791309945, "value_scale": 1.21553498359514, "pwin_scale": 0.9281569297129109, "open_boost": 1.356449036231902, "riichi_pw_mult": 1.1694548180963336, "danger_scale": 0.7119409505900914, "loss_scale": 0.6210747847103298, "future_scale": 0.0, "fold_cost": 589.083359543701, "fold_risk": 0.01501735503847441, "open_threat3": 0.8368042146944967, "open_threat2": 0.3279376395653317, "call_mult": 1.1401022857364307, "call_add": 83.55175557591394, "kan_max_shanten": 1, "kan_enable": 1, "riichi_bias": 332.59775560516545, "fold_shanten": 5, "push_danger_limit": 1.0, "yakuhai_pon_force": 0, "sure_yaku_call_force": 0, "lead_defense": 0.9963699104037299, "trail_aggr": 0.8176118255881848}, "t": 3475}
+{"stage": 1, "gen": 2, "round": 0, "cand": "center", "avg_rank": 2.5, "t": 3488}
+{"stage": 1, "gen": 2, "round": 0, "cand": "c0", "avg_rank": 2.55, "t": 3501}
+{"stage": 1, "gen": 2, "round": 0, "cand": "c1", "avg_rank": 2.49, "t": 3514}
+{"stage": 1, "gen": 2, "round": 0, "cand": "c2", "avg_rank": 2.42, "t": 3528}
+{"stage": 1, "gen": 2, "round": 0, "cand": "c3", "avg_rank": 2.45, "t": 3541}
+{"stage": 1, "gen": 2, "round": 0, "cand": "c4", "avg_rank": 2.53, "t": 3554}
+{"stage": 1, "gen": 2, "round": 0, "cand": "c5", "avg_rank": 2.53, "t": 3566}
+{"stage": 1, "gen": 2, "round": 0, "cand": "c6", "avg_rank": 2.48, "t": 3579}
+{"stage": 1, "gen": 2, "round": 0, "cand": "c7", "avg_rank": 2.51, "t": 3592}
+{"stage": 1, "gen": 2, "round": 0, "cand": "c8", "avg_rank": 2.51, "t": 3605}

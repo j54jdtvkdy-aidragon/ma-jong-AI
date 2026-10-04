@@ -3,6 +3,7 @@
  - 槓: 暗槓/加槓/大明槓、嶺上開花、槍槓(加槓のみ)、カンドラ(暗槓は即時、明槓/加槓は打牌後)、四開槓流局
  - 未実装: 流し満貫、途中流局(九種九牌・四風連打・四家立直)、パオ、頭ハネ以外の細則
  出力は mjai 形式のイベント列で、レビュー機能に直接渡せる。"""
+import inspect
 import random
 from typing import List, Optional
 
@@ -102,10 +103,29 @@ class Round:
         return None if r.error else r
 
 
+async def _maybe(x):
+    """プレイヤーのメソッドが同期でも非同期(人間の入力待ち)でも扱えるようにする。"""
+    return await x if inspect.isawaitable(x) else x
+
+
+def _drive(coro):
+    """一度も中断しないコルーチンを同期的に実行する(AI同士の対局用)。"""
+    try:
+        coro.send(None)
+    except StopIteration as e:
+        return e.value
+    raise RuntimeError("engine suspended while running synchronously")
+
+
 HOOK = None     # 学習データ収集用: 打牌のたびに HOOK(rd, trackers) が呼ばれる
 
 
 def play_game(players, seed=None, log=None, hook=None, east_only=False):
+    """同期版。AIだけの対局に使う。人間プレイヤー(非同期)を含める場合は play_game_async を使う。"""
+    return _drive(play_game_async(players, seed, log, hook, east_only))
+
+
+async def play_game_async(players, seed=None, log=None, hook=None, east_only=False):
     """players: 4つのエージェント。戻り値 dict(scores, ranks, events)。"""
     global HOOK
     HOOK = hook
@@ -128,7 +148,7 @@ def play_game(players, seed=None, log=None, hook=None, east_only=False):
     while True:
         bakaze = "ESW"[r_idx // 4]
         kyoku = r_idx % 4 + 1
-        res = _play_round(players, trackers, emit, Round(None, oya, bakaze, kyoku, honba, kyotaku, rng), scores)
+        res = await _play_round(players, trackers, emit, Round(None, oya, bakaze, kyoku, honba, kyotaku, rng), scores)
         scores = res["scores"]
         kyotaku = res["kyotaku"]
         emit({"type": "end_kyoku"})
@@ -172,7 +192,7 @@ def _after_kan(rd):
         rd.dead.append(rd.live.pop())
 
 
-def _play_round(players, trackers, emit, rd: Round, scores):
+async def _play_round(players, trackers, emit, rd: Round, scores):
     scores = list(scores)
     oya = rd.oya
     emit({"type": "start_kyoku", "bakaze": rd.bakaze, "kyoku": rd.kyoku, "honba": rd.honba,
@@ -202,7 +222,7 @@ def _play_round(players, trackers, emit, rd: Round, scores):
         tg = trackers[cur]
         if drew and rd.live and rd.kan_count() < 4:
             opts = self_kan_options(tg)
-            kopt = players[cur].kan(tg) if opts else None
+            kopt = (await _maybe(players[cur].kan(tg))) if opts else None
             if kopt is not None:
                 res = _do_self_kan(players, trackers, emit, rd, scores, cur, kopt, opts)
                 if res is not None:
@@ -216,7 +236,7 @@ def _play_round(players, trackers, emit, rd: Round, scores):
         if rd.riichi[cur]:
             dtile = rd.hands[cur][-1]
         else:
-            choice = players[cur].discard(tg, forbidden)
+            choice = await _maybe(players[cur].discard(tg, forbidden))
             tstr = choice["tile"]
             dtile = next(t for t in rd.hands[cur] if id_to_str(t) == tstr)
             if choice.get("riichi"):
@@ -269,7 +289,7 @@ def _play_round(players, trackers, emit, rd: Round, scores):
             p = (cur + k) % 4
             if rd.riichi[p]:
                 continue
-            opt = players[p].call(trackers[p], cur, id_to_str(dtile))
+            opt = await _maybe(players[p].call(trackers[p], cur, id_to_str(dtile)))
             if opt and opt["type"] in ("pon", "daiminkan"):
                 called = (p, opt)
                 break

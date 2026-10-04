@@ -84,8 +84,17 @@ tr.me td{background:#fff6d6} tr.ai td:first-child{font-weight:700}
 .result .mist{border-top:1px solid var(--line);padding:8px 0;font-size:13px}
 .empty{color:var(--muted);font-size:13px}
 </style>
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0a150f">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script src="pyodide/pyodide.js"></script>
+<script src="boot.js"></script>
+<style>#boot{position:fixed;inset:0;background:#0f1f17;color:#f1ecd8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:99;padding:24px;text-align:center}#boot .b{width:min(320px,80vw);height:8px;background:#ffffff22;border-radius:4px;overflow:hidden}#boot .b>div{height:100%;background:#e0b94a;width:0;transition:width .3s}</style>
 </head>
 <body>
+<div id="boot"><div style="font-size:18px;font-weight:600">麻雀 打牌トレーニング</div><div id="bootmsg">起動中…</div><div class="b"><div id="bootbar"></div></div></div>
 <header>
   <h1>麻雀 打牌トレーニング</h1>
   <span class="sp"></span>

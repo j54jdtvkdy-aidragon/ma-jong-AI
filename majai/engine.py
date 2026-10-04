@@ -105,7 +105,7 @@ class Round:
 HOOK = None     # 学習データ収集用: 打牌のたびに HOOK(rd, trackers) が呼ばれる
 
 
-def play_game(players, seed=None, log=None, hook=None):
+def play_game(players, seed=None, log=None, hook=None, east_only=False):
     """players: 4つのエージェント。戻り値 dict(scores, ranks, events)。"""
     global HOOK
     HOOK = hook
@@ -113,6 +113,9 @@ def play_game(players, seed=None, log=None, hook=None):
     ev = log if log is not None else []
     scores = [25000] * 4
     trackers = [StateTracker(i) for i in range(4)]
+    for i, pl in enumerate(players):
+        if hasattr(pl, 'bind'):
+            pl.bind(trackers[i])      # 対話式プレイヤーが自分の視点の局面を参照できるようにする
 
     def emit(e, to=None):
         ev.append(e)
@@ -142,6 +145,8 @@ def play_game(players, seed=None, log=None, hook=None):
             honba = res["honba"]
             oya = (oya + 1) % 4
             r_idx += 1
+            if east_only and r_idx >= 4:
+                break
             if r_idx == 8 and max(scores) >= 30000:
                 break
             if r_idx >= 12:

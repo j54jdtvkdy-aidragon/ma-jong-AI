@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>麻雀 打牌トレーニング</title>
+<style>
+:root{
+  --bg:#0f1f17; --felt:#14452f; --felt2:#0f3825; --panel:#fbfaf6; --ink:#1d2321; --muted:#667068;
+  --line:#d9d6cb; --tile:#f6f1e1; --tile-edge:#cfc7ad; --man:#222; --pin:#1b5fb5; --sou:#1c7a3e; --red:#c8281e;
+  --good:#1f8a4c; --warn:#b7791f; --bad:#d9622b; --worst:#c53030; --accent:#e0b94a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;font-size:14px}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#0a150f;color:#f1ecd8;flex-wrap:wrap}
+header h1{font-size:16px;margin:0;font-weight:600;letter-spacing:.04em}
+header .sp{flex:1}
+button,select{font:inherit}
+.btn{background:var(--accent);color:#2a2208;border:0;border-radius:6px;padding:7px 14px;font-weight:600;cursor:pointer}
+.btn.sec{background:#2c4a3b;color:#eee}
+.btn:disabled{opacity:.4;cursor:default}
+select{padding:6px;border-radius:6px;border:0}
+main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:12px;padding:12px;max-width:1280px;margin:0 auto}
+@media(max-width:980px){main{grid-template-columns:1fr}}
+.table{background:radial-gradient(circle at 50% 40%,var(--felt),var(--felt2));border-radius:12px;padding:12px;color:#f3f0e4;min-height:640px;position:relative}
+.info{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid #ffffff22}
+.info b{font-size:17px}
+.dora{display:flex;gap:3px;align-items:center}
+.grid4{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.pl{background:#00000026;border-radius:8px;padding:8px}
+.pl h3{margin:0 0 6px;font-size:13px;display:flex;gap:8px;align-items:center;font-weight:600}
+.pl h3 .score{margin-left:auto;font-variant-numeric:tabular-nums}
+.badge{background:var(--worst);color:#fff;border-radius:4px;padding:1px 6px;font-size:11px}
+.badge.d{background:var(--accent);color:#2a2208}
+.river{display:flex;flex-wrap:wrap;gap:2px;min-height:34px}
+.melds{display:flex;gap:8px;margin:4px 0;flex-wrap:wrap}
+.meld{display:flex;gap:1px}
+.tile{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;background:var(--tile);border:1px solid var(--tile-edge);border-bottom-width:3px;border-radius:4px;color:var(--man);font-weight:700;line-height:1.05;user-select:none}
+.tile.s{width:22px;height:30px;font-size:12px}
+.tile.m{width:30px;height:42px;font-size:16px}
+.tile.l{width:44px;height:62px;font-size:23px}
+.tile .k{font-size:.62em;font-weight:600}
+.tile.man{color:var(--man)} .tile.pin{color:var(--pin)} .tile.sou{color:var(--sou)}
+.tile.red{background:#f9d9d3;border-color:#d99a90} .tile.red .n{color:var(--red)}
+.tile.hon.c{color:var(--red)} .tile.hon.f{color:var(--sou)} .tile.hon.p{color:#999}
+.tile.called{opacity:.35} .tile.riichi{transform:rotate(90deg);margin:0 6px}
+.tile.tg{filter:brightness(.88)}
+.hand{margin-top:14px;padding:12px;background:#00000033;border-radius:10px}
+.hand .row{display:flex;gap:4px;align-items:flex-end;flex-wrap:wrap}
+.hand .gap{width:16px}
+.hand .tile{cursor:pointer;transition:transform .08s}
+.hand .tile:hover{transform:translateY(-6px)}
+.hand .tile.dis{opacity:.35;cursor:not-allowed}
+.hand .tile.hint{outline:3px solid var(--accent);outline-offset:1px}
+.hand .tile.rch{outline:2px dashed #fff8}
+.controls{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap}
+.status{margin-top:10px;font-size:13px;color:#d6d2c0;min-height:20px}
+.modal{position:absolute;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;border-radius:12px;z-index:5}
+.modal .box{background:var(--panel);color:var(--ink);padding:18px 22px;border-radius:10px;min-width:280px;max-width:90%}
+.modal h2{margin:0 0 10px;font-size:16px}
+.modal .opts{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.side{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--panel);border-radius:10px;padding:12px 14px}
+.card h2{margin:0 0 8px;font-size:14px}
+.verdict{border-left:6px solid var(--good)}
+.verdict.s1{border-color:var(--warn)} .verdict.s2{border-color:var(--bad)} .verdict.s3{border-color:var(--worst)}
+.verdict .head{font-weight:700;font-size:15px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--good);color:#fff;font-weight:600}
+.s1 .pill{background:var(--warn)} .s2 .pill{background:var(--bad)} .s3 .pill{background:var(--worst)}
+.verdict ul{margin:8px 0 0;padding-left:18px}
+.verdict li{margin:3px 0}
+.meta{color:var(--muted);font-size:12px;margin-top:4px}
+table{border-collapse:collapse;width:100%;margin-top:8px;font-size:12px}
+th,td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+tr.me td{background:#fff6d6} tr.ai td:first-child{font-weight:700}
+.log{max-height:200px;overflow:auto;font-size:12px;line-height:1.7;color:#333}
+.hist{max-height:260px;overflow:auto}
+.hist .it{display:flex;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line);font-size:12px;cursor:pointer}
+.hist .dot{width:10px;height:10px;border-radius:50%;background:var(--good);flex:none}
+.hist .s1 .dot{background:var(--warn)} .hist .s2 .dot{background:var(--bad)} .hist .s3 .dot{background:var(--worst)}
+.tips{font-size:12px;color:var(--muted);line-height:1.6}
+.result h2{font-size:18px}
+.result .mist{border-top:1px solid var(--line);padding:8px 0;font-size:13px}
+.empty{color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>麻雀 打牌トレーニング</h1>
+  <span class="sp"></span>
+  <label>対戦相手 <select id="opp"></select></label>
+  <label>形式 <select id="fmt"><option value="1">東風戦(4局)</option><option value="0">東南戦</option></select></label>
+  <button class="btn" id="newBtn">新しい対局</button>
+</header>
+<main>
+  <section class="table" id="table">
+    <div class="empty" style="color:#d6d2c0;padding:30px">「新しい対局」を押すと始まります。あなたが打牌・鳴き・カンをするたびに、AIの推奨と比べた評価と理由が右側に表示されます。</div>
+  </section>
+  <aside class="side">
+    <div class="card" id="fbCard"><h2>解説</h2><div class="empty">打牌するとここに評価が出ます。</div></div>
+    <div class="card"><h2>これまでの判断</h2><div class="hist" id="hist"><div class="empty">まだありません</div></div></div>
+    <div class="card"><h2>場の記録</h2><div class="log" id="log"></div></div>
+    <div class="card tips">
+      <b>見方</b><br>
+      ・<b>最善</b>: AIの推奨と同じ(または差が小さい)。<br>
+      ・<b>疑問手/悪手/大悪手</b>: AI評価での損失(点数換算)の目安が約150/400/1000点以上。<br>
+      ・AIの数値は簡易モデルによる概算です。順位付けと理由を参考にしてください。
+    </div>
+  </aside>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const SUIT = {m:"man", p:"pin", s:"sou"}, SUITK = {m:"萬", p:"筒", s:"索"};
+const HONOR = {E:["東",""], S:["南",""], W:["西",""], N:["北",""], P:["白","p"], F:["發","f"], C:["中","c"]};
+let sid = null, evCur = 0, fbCur = 0, lastPid = null, riichiMode = false, hintOn = false, table = null, pending = null, polling = false;
+let fbList = [], logLines = [];
+
+function tileEl(t, size, extra){
+  const el = document.createElement("div");
+  el.className = "tile " + size + (extra ? " " + extra : "");
+  if (/^[1-9][mps]/.test(t)){
+    const red = t.endsWith("r");
+    el.classList.add(SUIT[t[1]]); if (red) el.classList.add("red");
+    el.innerHTML = `<span class="n">${t[0]}</span><span class="k">${SUITK[t[1]]}</span>`;
+  } else {
+    const [k, c] = HONOR[t]; el.classList.add("hon"); if (c) el.classList.add(c);
+    el.textContent = k;
+  }
+  el.dataset.t = t;
+  return el;
+}
+function jp(t){
+  if (/^[1-9][mps]/.test(t)) return t[0] + SUITK[t[1]] + (t.endsWith("r") ? "(赤)" : "");
+  return HONOR[t][0];
+}
+const WIND = {E:"東", S:"南", W:"西", N:"北"};
+
+async function api(path, body){
+  const r = await fetch(path, body ? {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)} : {});
+  return r.json();
+}
+
+async function init(){
+  const o = await api("/api/opponents");
+  $("#opp").innerHTML = Object.entries(o).map(([k,v]) => `<option value="${k}" ${k==="medium"?"selected":""}>${v}</option>`).join("");
+  $("#newBtn").onclick = newGame;
+}
+async function newGame(){
+  if (sid) await api("/api/close", {sid});
+  const r = await api("/api/new", {opponent: $("#opp").value, east_only: $("#fmt").value === "1"});
+  sid = r.sid; evCur = 0; fbCur = 0; lastPid = null; riichiMode = false; hintOn = false; table = null; pending = null;
+  fbList = []; logLines = [];
+  $("#fbCard").innerHTML = "<h2>解説</h2><div class='empty'>打牌するとここに評価が出ます。</div>";
+  $("#hist").innerHTML = "<div class='empty'>まだありません</div>"; $("#log").innerHTML = "";
+  $("#table").innerHTML = "<div class='empty' style='color:#d6d2c0;padding:30px'>配牌中…</div>";
+  if (!polling) poll();
+}
+async function poll(){
+  polling = true;
+  while (sid){
+    let s;
+    try { s = await api(`/api/state?sid=${sid}&ev=${evCur}&fb=${fbCur}`); } catch(e){ await new Promise(r=>setTimeout(r,800)); continue; }
+    if (s.error && !s.events){ $("#table").innerHTML = "<pre style='white-space:pre-wrap'>"+s.error+"</pre>"; break; }
+    evCur = s.ev_cursor; fbCur = s.fb_cursor;
+    if (s.events.length){ logLines.push(...s.events); renderLog(); }
+    if (s.feedback.length){ s.feedback.forEach(f => fbList.push(f)); showFeedback(fbList[fbList.length-1]); renderHist(); }
+    if (s.table) table = s.table;
+    pending = s.pending;
+    if (s.error){ $("#table").insertAdjacentHTML("beforeend", "<pre style='color:#fbb;white-space:pre-wrap'>"+s.error+"</pre>"); break; }
+    if (s.finished){ renderTable(); showResult(s.result); break; }
+    if (pending && pending.id !== lastPid){ lastPid = pending.id; riichiMode = false; hintOn = false; renderTable(); }
+    else if (!pending && table) { renderTable(true); }
+  }
+  polling = false;
+}
+function renderLog(){
+  const el = $("#log"); el.innerHTML = logLines.slice(-200).map(l => `<div>${l}</div>`).join(""); el.scrollTop = el.scrollHeight;
+}
+function renderTable(wait){
+  if (!table) return;
+  const t = table, root = $("#table");
+  const dora = t.dora.map(d => tileEl(d,"s").outerHTML).join("");
+  let html = `<div class="info"><b>${WIND[t.bakaze]}${t.kyoku}局</b><span>${t.honba}本場</span><span>供託 ${t.kyotaku}</span><span>残り ${t.tiles_left}枚</span><span class="dora">ドラ表示: ${dora}</span></div><div class="grid4" id="g4"></div><div class="hand" id="hand"></div><div class="status" id="status"></div>`;
+  root.innerHTML = html;
+  const g = $("#g4");
+  const order = [2,3,1,0];   // 対面,上家,下家,あなた
+  for (const p of order){
+    const pl = t.players[p];
+    const d = document.createElement("div"); d.className = "pl";
+    d.innerHTML = `<h3>${pl.name}<span>${WIND[pl.wind]}家</span>${pl.dealer?'<span class="badge d">親</span>':''}${pl.riichi?'<span class="badge">立直</span>':''}<span class="score">${pl.score}</span></h3>`;
+    const m = document.createElement("div"); m.className = "melds";
+    pl.melds.forEach(me => { const w = document.createElement("div"); w.className="meld"; me.tiles.forEach(x => w.appendChild(tileEl(x,"s"))); m.appendChild(w); });
+    d.appendChild(m);
+    const r = document.createElement("div"); r.className = "river";
+    pl.discards.forEach(x => r.appendChild(tileEl(x.t, "s", (x.called?"called ":"") + (x.riichi?"riichi ":"") + (x.tsumogiri?"tg":""))));
+    d.appendChild(r); g.appendChild(d);
+  }
+  const hand = $("#hand");
+  const myMelds = t.players[0].melds;
+  const row = document.createElement("div"); row.className = "row";
+  const isDiscard = pending && pending.kind === "discard";
+  const hintTiles = isDiscard && hintOn ? pending.hint : [];
+  const rtiles = isDiscard ? new Set(pending.riichi_tiles) : new Set();
+  const typeOf = x => x.replace("r","");
+  const addTile = (x) => {
+    const el = tileEl(x, "l");
+    if (isDiscard){
+      const idx = typeOf(x);
+      const blocked = pending.forbidden.some(f => sameType(x, f));
+      if (blocked) el.classList.add("dis");
+      if (hintTiles.some(h => h.tile === x || (typeOf(h.tile) === idx && !hintTiles.some(q => q.tile === x)))) el.classList.add("hint");
+      if (riichiMode && rtiles.has(x)) el.classList.add("rch");
+      el.onclick = () => { if (!blocked) discard(x); };
+    }
+    row.appendChild(el);
+  };
+  t.hand.forEach(addTile);
+  if (t.drawn){ const gp = document.createElement("div"); gp.className = "gap"; row.appendChild(gp); addTile(t.drawn); }
+  if (myMelds.length){ const gp = document.createElement("div"); gp.className = "gap"; row.appendChild(gp);
+    myMelds.forEach(me => { const w = document.createElement("div"); w.className="meld"; me.tiles.forEach(x => w.appendChild(tileEl(x,"m"))); row.appendChild(w); }); }
+  hand.appendChild(row);
+  const ctl = document.createElement("div"); ctl.className = "controls";
+  if (isDiscard){
+    if (pending.riichi_tiles.length){
+      const b = document.createElement("button"); b.className = "btn" + (riichiMode?"":" sec"); b.textContent = riichiMode ? "立直: オン" : "立直する";
+      b.onclick = () => { riichiMode = !riichiMode; renderTable(); }; ctl.appendChild(b);
+    }
+    const h = document.createElement("button"); h.className = "btn sec"; h.textContent = hintOn ? "ヒントを隠す" : "ヒント(AIの上位3候補)";
+    h.onclick = () => { hintOn = !hintOn; renderTable(); }; ctl.appendChild(h);
+  }
+  hand.appendChild(ctl);
+  $("#status").textContent = pending ? (isDiscard ? "切る牌をクリック" + (riichiMode ? "(立直宣言牌を選んでください: 点線の牌が立直可能)" : "") : "") : (wait ? "他家の番…" : "");
+  if (pending && (pending.kind === "call" || pending.kind === "kan")){
+    const mdl = document.createElement("div"); mdl.className = "modal";
+    const box = document.createElement("div"); box.className = "box";
+    if (pending.kind === "call"){
+      box.innerHTML = `<h2>${t.players[pending.from].name} が ${jp(pending.tile)} を切りました</h2><div>鳴きますか？</div>`;
+    } else box.innerHTML = `<h2>カンできます</h2>`;
+    const opts = document.createElement("div"); opts.className = "opts";
+    pending.options.forEach((o,i) => { const b = document.createElement("button"); b.className = "btn"; b.textContent = o.label; b.onclick = () => choose(i); opts.appendChild(b); });
+    const pass = document.createElement("button"); pass.className = "btn sec"; pass.textContent = pending.kind === "call" ? "スルー" : "カンしない"; pass.onclick = () => choose(null); opts.appendChild(pass);
+    box.appendChild(opts); mdl.appendChild(box); root.appendChild(mdl);
+  }
+}
+function sameType(a, b){ return a.replace("r","") === b.replace("r",""); }
+async function discard(tile){
+  if (!pending) return;
+  const id = pending.id; pending = null;
+  await api("/api/action", {sid, id, tile, riichi: riichiMode});
+  riichiMode = false;
+}
+async function choose(i){
+  if (!pending) return;
+  const id = pending.id; pending = null;
+  await api("/api/action", {sid, id, choice: i});
+}
+function showFeedback(f){
+  const sev = {"最善":0, "概ね同等":0, "疑問手":1, "悪手":2, "大悪手":3}[f.severity] ?? 0;
+  const kind = {discard:"打牌", call:"鳴き", kan:"カン"}[f.kind];
+  let html = `<div class="head"><span class="pill">${f.severity}</span>${f.round} ${f.turn}巡目 ${kind}</div>`;
+  html += `<div class="meta">手牌: ${f.hand}</div>`;
+  html += `<div style="margin-top:6px">あなた: <b>${f.chosen}</b> ／ AI推奨: <b>${f.best}</b>${f.loss?` ／ 損失≈${f.loss}点`:""}</div>`;
+  if (f.reasons && f.reasons.length) html += "<ul>" + f.reasons.map(r => `<li>${r}</li>`).join("") + "</ul>";
+  else if (f.same) html += `<div class="meta" style="margin-top:6px">AIの推奨と同じ、または差がごく小さい判断です。</div>`;
+  if (f.candidates){
+    html += `<table><tr><th>候補</th><th>向聴</th><th>受入</th><th>放銃率</th><th>評価</th></tr>`;
+    f.candidates.forEach((c,i) => {
+      const me = c.label === f.chosen;
+      html += `<tr class="${me?'me':''} ${i===0?'ai':''}"><td>${c.label}${i===0?" ★":""}${me?" ←あなた":""}</td><td>${c.shanten}</td><td>${c.ukeire}</td><td>${(c.danger*100).toFixed(0)}%</td><td>${c.ev}</td></tr>`;
+    });
+    if (f.chosen_row && !f.candidates.some(c => c.label === f.chosen)){
+      const c = f.chosen_row; html += `<tr class="me"><td>${c.label} ←あなた</td><td>${c.shanten}</td><td>${c.ukeire}</td><td>${(c.danger*100).toFixed(0)}%</td><td>${c.ev}</td></tr>`;
+    }
+    html += `</table><div class="meta">向聴=聴牌までの枚数(0で聴牌) ／ 受入=手が進む牌の残り枚数 ／ 放銃率=立直などの相手に当たる確率の概算 ／ 評価=期待値の点数換算</div>`;
+    const best = f.candidates[0];
+    if (best && best.ukeire_tiles.length) html += `<div class="meta">★の受け入れ牌: ${best.ukeire_tiles.join(" ")}</div>`;
+  }
+  const card = $("#fbCard"); card.className = "card verdict s" + sev;
+  card.innerHTML = "<h2>解説</h2>" + html;
+}
+function renderHist(){
+  const el = $("#hist");
+  el.innerHTML = fbList.slice().reverse().map(f => {
+    const sev = {"最善":0, "概ね同等":0, "疑問手":1, "悪手":2, "大悪手":3}[f.severity] ?? 0;
+    return `<div class="it s${sev}" data-n="${f.n}"><span class="dot"></span><span>${f.round} ${f.turn}巡 ${f.chosen}${f.same?"":" → AI: "+f.best}</span><span style="margin-left:auto;color:#888">${f.loss?f.loss+"点":""}</span></div>`;
+  }).join("");
+  el.querySelectorAll(".it").forEach(it => it.onclick = () => showFeedback(fbList[+it.dataset.n - 1]));
+}
+function showResult(r){
+  const mdl = document.createElement("div"); mdl.className = "modal";
+  const box = document.createElement("div"); box.className = "box result"; box.style.maxHeight = "90%"; box.style.overflow = "auto"; box.style.width = "560px";
+  const names = ["あなた","下家","対面","上家"];
+  let h = `<h2>終局: あなたは ${r.ranks[0]} 位</h2><div>` + r.scores.map((s,i) => `${names[i]} ${s}(${r.ranks[i]}位)`).join(" ／ ") + "</div>";
+  h += `<div class="meta" style="margin:8px 0">通しレビュー: 判断${r.decisions}回、問題のあった判断${r.mistakes.length}件(損失合計 約${r.total_loss}点相当)</div>`;
+  r.mistakes.forEach(m => { h += `<div class="mist"><b>${m.round} ${m.turn}巡目【${m.severity}】損失≈${m.loss}点</b><br>手牌: ${m.hand}<br>あなた: ${m.actual} ／ AI推奨: ${m.best}${m.reasons.map(x => "<br>・"+x).join("")}</div>`; });
+  if (!r.mistakes.length) h += "<div>目立つミスはありませんでした。</div>";
+  h += `<div class="opts"><button class="btn" id="again">もう一局</button></div>`;
+  box.innerHTML = h; mdl.appendChild(box); $("#table").appendChild(mdl);
+  $("#again").onclick = newGame;
+}
+init();
+</script>
+</body>
+</html>

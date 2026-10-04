@@ -5,6 +5,8 @@ from typing import List, Optional
 
 from .agent import (Candidate, evaluate_discards, call_options, choose_call, evaluate_pass,
                     evaluate_call, threats, _kuikae, self_kan_options, kan_judgement, KAN_NAME)
+
+CALL_JP = {"pon": "ポン", "chi": "チー", "daiminkan": "大明槓"}
 from .state import StateTracker
 from .tiles import str_to_idx, idx_to_str, is_red
 
@@ -264,17 +266,17 @@ def _review_call(st, events, i, out, e):
         if st.is_menzen():
             rs.append("門前を崩すと立直・ツモ・裏ドラの打点を失い、守備力も落ちます。")
         out.append(Decision("call", _label(st), _turn_no(st), hand_str(st.hand),
-                            f"{nxt['type']} {jp(e['pai'])}", "スルー", loss, _severity(loss), rs, False))
+                            f"{CALL_JP[nxt['type']]} {jp(e['pai'])}", "スルー", loss, _severity(loss), rs, False))
     elif (not did) and rec is not None:
         o, c = rec
         loss = max(0.0, c.ev - base["ev"])
         if loss < 150:
             return
-        rs = [f"{o['type']}でシャンテン数 {base['shanten']}→{c.shanten}、和了期待値 約{base['ev']:.0f}点→約{c.ev:.0f}点。"]
+        rs = [f"{CALL_JP[o['type']]}でシャンテン数 {base['shanten']}→{c.shanten}、和了期待値 約{base['ev']:.0f}点→約{c.ev:.0f}点。"]
         if c.detail["han"] > 0:
             rs.append("役(役牌・タンヤオ等)が確保でき、スピードアップの価値が守備力低下を上回ります。")
         out.append(Decision("call", _label(st), _turn_no(st), hand_str(st.hand),
-                            "スルー", f"{o['type']} {jp(e['pai'])}", loss, _severity(loss), rs, False))
+                            "スルー", f"{CALL_JP[o['type']]} {jp(e['pai'])}", loss, _severity(loss), rs, False))
 
 
 def format_report(decisions: List[Decision], top: int = 10, show_all: bool = False) -> str:
@@ -293,3 +295,86 @@ def format_report(decisions: List[Decision], top: int = 10, show_all: bool = Fal
     if not bad:
         lines.append("目立つミスはありませんでした。")
     return "\n".join(lines)
+
+
+# ---------------- 対話アプリ向け: 1回の判断を即時に評価する ----------------
+def _cand_row(c: Candidate) -> dict:
+    return {"tile": c.tile, "label": jp(c.tile) + ("+立直" if c.riichi else ""), "riichi": c.riichi,
+            "shanten": c.shanten, "ukeire": c.ukeire,
+            "ukeire_tiles": [jpi(i) for i in c.ukeire_tiles[:10]],
+            "danger": round(c.danger, 3), "p_win": round(c.p_win, 3), "ev": round(c.ev),
+            "mode": c.mode}
+
+
+def judge_discard(st, cands, tile: str, riichi: bool) -> dict:
+    """候補評価(cands)に対する、実際の打牌(tile, riichi)の評価。"""
+    best = cands[0]
+    a = _find_candidate(cands, tile, riichi) or _find_candidate(cands, tile, False)
+    if a is None:
+        return {"kind": "discard", "ok": False}
+    loss = max(0.0, best.ev - a.ev)
+    same = (a.idx == best.idx and a.riichi == best.riichi) or loss < 1e-6
+    sev = "最善" if same else _severity(loss)
+    reasons = _explain_discard(st, a, best) if (loss >= 150 and not same) else []
+    return {"kind": "discard", "ok": True, "chosen": _c(a), "best": _c(best), "same": same, "loss": round(loss),
+            "severity": sev, "reasons": reasons, "turn": _turn_no(st), "hand": hand_str(st.hand),
+            "candidates": [_cand_row(c) for c in cands[:5]], "chosen_row": _cand_row(a)}
+
+
+def judge_call(st, actor: int, tile: str, chosen) -> dict:
+    """鳴き(chosen=optまたはNone=スルー)の評価。大明槓も扱う。"""
+    from .agent import choose_daiminkan
+    kan_rec = choose_daiminkan(st, actor, tile)
+    base = evaluate_pass(st)
+    name = lambda o: "スルー" if o is None else f"{ {'pon': 'ポン', 'chi': 'チー', 'daiminkan': '大明槓'}[o['type']] } {jp(tile)}"
+    out = {"kind": "call", "ok": True, "chosen": name(chosen), "turn": _turn_no(st), "hand": hand_str(st.hand),
+           "reasons": [], "loss": 0, "severity": "最善", "same": True}
+    if chosen is not None and chosen["type"] == "daiminkan" or (chosen is None and kan_rec is not None):
+        o = chosen if chosen is not None else kan_rec
+        ok, why = kan_judgement(st, o)
+        did = chosen is not None
+        out["best"] = name(kan_rec) if kan_rec else "スルー"
+        if did != ok:
+            out.update(same=False, loss=int(_kan_loss(st, did, ok)), severity=_severity(_kan_loss(st, did, ok)), reasons=[why])
+        return out
+    rec = choose_call(st, actor, tile)
+    out["best"] = name(rec[0]) if rec else "スルー"
+    if chosen is None and rec is not None:
+        o, c = rec
+        loss = max(0.0, c.ev - base["ev"])
+        if loss >= 150:
+            rs = [f"{ {'pon': 'ポン', 'chi': 'チー'}[o['type']] }でシャンテン数 {base['shanten']}→{c.shanten}、"
+                  f"和了期待値 約{base['ev']:.0f}点→約{c.ev:.0f}点になります。"]
+            if c.detail["han"] > 0:
+                rs.append("役が確保でき、スピードアップの価値が守備力の低下を上回ります。")
+            out.update(same=False, loss=round(loss), severity=_severity(loss), reasons=rs)
+    elif chosen is not None and rec is None:
+        c = evaluate_call(st, actor, tile, chosen)
+        loss = max(0.0, base["ev"] - c.ev) if c else 0.0
+        if loss >= 150:
+            rs = [f"鳴かない場合の和了期待値(約{base['ev']:.0f}点)が、鳴いた場合(約{c.ev:.0f}点)を上回ります。"]
+            if c.shanten >= base["shanten"]:
+                rs.append(f"鳴いてもシャンテン数が進みません({base['shanten']}→{c.shanten})。")
+            if st.is_menzen():
+                rs.append("門前を崩すと立直・ツモ・裏ドラの打点を失い、守備力も落ちます。")
+            out.update(same=False, loss=round(loss), severity=_severity(loss), reasons=rs)
+    elif chosen is not None and rec is not None and sorted(chosen["consumed"]) != sorted(rec[0]["consumed"]):
+        out["reasons"] = ["鳴くこと自体は妥当です。どの牌で鳴くかでAIは別の選択でした(赤ドラの扱い・チーの形)。"]
+    return out
+
+
+def judge_kan(st, chosen) -> dict:
+    """自分のツモ番での暗槓/加槓の評価(chosen=optまたはNone=しない)。"""
+    opts = self_kan_options(st)
+    rec = next((o for o in opts if kan_judgement(st, o)[0]), None)
+    lab = lambda o: "カンしない" if o is None else f"{KAN_NAME[o['type']]} {jp(o.get('pai') or o['consumed'][0])}"
+    out = {"kind": "kan", "ok": True, "chosen": lab(chosen), "best": lab(rec), "turn": _turn_no(st),
+           "hand": hand_str(st.hand), "reasons": [], "loss": 0, "severity": "最善", "same": True}
+    if (chosen is None) != (rec is None):
+        o = chosen if chosen is not None else rec
+        ok, why = kan_judgement(st, o)
+        did = chosen is not None
+        loss = _kan_loss(st, did, ok)
+        if did != ok:
+            out.update(same=False, loss=int(loss), severity=_severity(loss), reasons=[why])
+    return out
